@@ -5,10 +5,10 @@ import {
   INITIAL_COMPLAINTS,
   INITIAL_COUPONS,
   INITIAL_COURTS,
-  INITIAL_LIVE_MATCHES,
   INITIAL_ORDERS,
   INITIAL_POSTS,
 } from '../mock/data'
+import { ENRICHED_MATCHES } from '../mock/details'
 import type {
   AbilityDimensions,
   ActionModalPayload,
@@ -25,7 +25,7 @@ import type {
   VisitorOrigin,
 } from '../types/portal'
 
-const STORAGE_KEY = 'jingshan_tennis_portal_state_v2'
+const STORAGE_KEY = 'jingshan_tennis_portal_state_v3'
 
 interface PersistedState {
   points: number
@@ -38,6 +38,7 @@ interface PersistedState {
   posts: FeedbackPost[]
   complaints: ComplaintTicket[]
   claimedHomeSubsidy: boolean
+  dismissedEventModal: boolean
 }
 
 function loadSaved(): Partial<PersistedState> {
@@ -59,10 +60,16 @@ const state = reactive({
   courtSurfaceFilter: '全部' as '全部' | '硬地' | '红土' | '室内风雨',
   courtRegionFilter: '全部' as '全部' | '温泉街道' | '新市街道' | '永兴街道',
   showActivityPopup: true,
+  showEventModal: !(saved.dismissedEventModal ?? false),
+  dismissedEventModal: saved.dismissedEventModal ?? false,
+  activeMatchRecapId: null as string | null,
+  activeHotelId: null as string | null,
+  activeProductId: null as string | null,
+  showCinemaModal: false,
   points: saved.points ?? 1280,
   abilityLevel: saved.abilityLevel ?? 'JS-3.5',
   ability: (saved.ability ?? { ...INITIAL_ABILITY }) as AbilityDimensions,
-  liveMatches: structuredClone(INITIAL_LIVE_MATCHES) as LiveMatch[],
+  liveMatches: structuredClone(ENRICHED_MATCHES) as LiveMatch[],
   courts: structuredClone(INITIAL_COURTS) as CourtVenue[],
   orders: (saved.orders ?? structuredClone(INITIAL_ORDERS)) as PortalOrder[],
   coupons: (saved.coupons ?? structuredClone(INITIAL_COUPONS)) as CouponItem[],
@@ -72,9 +79,9 @@ const state = reactive({
   claimedHomeSubsidy: saved.claimedHomeSubsidy ?? false,
   ticketStubCode: 'JS-20261126-089',
   parkingLots: [
-    { id: 'p1', name: '国际网球中心 P1', remain: 84, total: 160, rating: 4.9, note: '含12个快充桩 · 订场免费停3h', reserved: false },
-    { id: 'ev1', name: '温泉新区超充站', remain: 14, total: 18, rating: 4.9, note: '120kW快充 · 距场馆200m', isCharger: true, reserved: false },
-    { id: 'p2', name: '文峰公园 P2', remain: 42, total: 120, rating: 4.8, note: '距文峰夜市150m · 可预约', reserved: false },
+    { id: 'p1', name: '国际网球中心 P1', address: '温泉街道网球大道北侧P1入口', lng: 113.1185, lat: 31.0226, remain: 84, total: 160, rating: 4.9, note: '含12个快充桩 · 订场免费停3h', reserved: false },
+    { id: 'ev1', name: '温泉新区超充站', address: '温泉街道温泉大道与京山大道交叉口', lng: 113.1228, lat: 31.0212, remain: 14, total: 18, rating: 4.9, note: '120kW快充 · 距场馆200m', isCharger: true, reserved: false },
+    { id: 'p2', name: '文峰公园 P2', address: '新市街道文峰路文峰公园南门', lng: 113.1128, lat: 31.0185, remain: 42, total: 120, rating: 4.8, note: '距文峰夜市150m · 可预约', reserved: false },
   ],
   lightbox: null as LightboxPayload | null,
   bookingDraft: null as BookingDraft | null,
@@ -95,6 +102,7 @@ watch(
     posts: state.posts,
     complaints: state.complaints,
     claimedHomeSubsidy: state.claimedHomeSubsidy,
+    dismissedEventModal: state.dismissedEventModal,
   }),
   (val) => {
     try {
@@ -145,10 +153,56 @@ export function usePortalStore() {
     state.actionModal = payload
   }
 
+  function openNavigation(payload: {
+    placeName: string
+    address: string
+    lng: number
+    lat: number
+    distance: string
+    driveMin: string
+    tip: string
+  }) {
+    state.actionModal = { type: 'nav', ...payload }
+  }
+
+  function closeEventModal(dontShowAgain = false) {
+    state.showEventModal = false
+    if (dontShowAgain) state.dismissedEventModal = true
+  }
+
+  function openMatchRecap(matchId: string) {
+    state.activeMatchRecapId = matchId
+  }
+
+  function addMatchComment(matchId: string, content: string, score: number) {
+    const m = state.liveMatches.find((x) => x.id === matchId)
+    if (!m || !content.trim()) return
+    m.comments.unshift({
+      id: `mc-${Date.now()}`,
+      user: '林先生',
+      city: state.origin.slice(0, 2),
+      score,
+      content: content.trim(),
+      likes: 1,
+      liked: true,
+    })
+    state.points += 10
+    showToast('复盘热评发布成功！获得 +10 金网积分')
+  }
+
+  function rateMatchPlayer(matchId: string, side: 'A' | 'B', star: number) {
+    const m = state.liveMatches.find((x) => x.id === matchId)
+    if (!m) return
+    const next = Number((((side === 'A' ? m.ratingA : m.ratingB) * 9 + star * 2) / 10).toFixed(1))
+    if (side === 'A') m.ratingA = next
+    else m.ratingB = next
+    showToast(`已为 ${side === 'A' ? m.playerA : m.playerB} 打分（${star * 2}.0 分），当前虎扑综合评分 ${next}`)
+  }
+
   function handleSearch() {
     const q = state.searchQuery.trim()
     if (!q) {
-      showToast('请输入搜索关键词，如：红土、网球公寓、购房减5万、充电桩、省网校')
+      showToast('请输入搜索关键词，如：红土、复盘、网球公寓、购房减5万、电影院、充电桩')
       return
     }
     if (/红土/.test(q)) {
@@ -157,13 +211,13 @@ export function usePortalStore() {
     } else if (/风雨|室内/.test(q)) {
       state.courtSurfaceFilter = '室内风雨'
       switchModule(2)
-    } else if (/比分|球场|订场|陪练|约球|硬地/.test(q)) switchModule(2)
+    } else if (/比分|复盘|球场|订场|陪练|约球|硬地/.test(q)) switchModule(2)
     else if (/游|绿林山|温泉|明显陵|漳河|夜市|导览/.test(q)) switchModule(3)
     else if (/吃|桥米|美食|团餐|菜单/.test(q)) switchModule(4)
     else if (/住|酒店|民宿|公寓|购房|5万/.test(q)) switchModule(5)
     else if (/行|车位|停车|充电|限行|封闭|司机|公交|租车/.test(q)) switchModule(6)
     else if (/购|商城|李宁|葛粉|文创|特产/.test(q)) switchModule(7)
-    else if (/娱|农庄|采摘|亲子|KTV|电影|康养/.test(q)) switchModule(8)
+    else if (/娱|农庄|采摘|亲子|KTV|电影|影院|康养/.test(q)) switchModule(8)
     else if (/训|网校|研学|团建|晋升|评测|康复/.test(q)) switchModule(9)
     else if (/公厕|卫生间|医疗|ATM|母婴|天气|路况/.test(q)) switchModule(10)
     else if (/投诉|评价|预警|打卡|12345/.test(q)) switchModule(11)
@@ -192,6 +246,12 @@ export function usePortalStore() {
       m.setsA[1] = String(Number(m.setsA[1]) + 1)
       m.setsA[2] = '0'
       m.setsB[2] = '0'
+      m.playByPlay.unshift({
+        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        setInfo: `第2盘 局分 ${m.setsA[1]}-${m.setsB[1]}`,
+        tag: '关键分',
+        text: `${m.playerA} 保发成功，网球记实时战报已同步更新！`,
+      })
     }
     showToast(`已从「网球记」同步最新局分：${m.playerA} ${m.setsA.join('-')} vs ${m.playerB} ${m.setsB.join('-')}`)
   }
@@ -256,21 +316,23 @@ export function usePortalStore() {
     subtitle: string,
     amount: number,
     pointsGain = 60,
+    pointsSpent = 0,
   ) {
     const order: PortalOrder = {
       id: `ORD-${Date.now().toString().slice(-6)}`,
       category,
       title,
       subtitle,
-      time: '近期已约',
+      time: '刚刚下单',
       amount,
       status: category === '住宿' ? '已确认' : '待使用',
       cancellable: true,
     }
     await apiRequest('/orders', { method: 'POST', body: JSON.stringify(order) }, () => order)
     state.orders.unshift(order)
+    if (pointsSpent > 0 && state.points >= pointsSpent) state.points -= pointsSpent
     state.points += pointsGain
-    showToast(`预订成功：「${title}」已同步至个人中心，获赠 +${pointsGain} 金网积分！`)
+    showToast(`支付成功：「${title}」（¥${amount}）已同步至个人中心，获赠 +${pointsGain} 金网积分！`)
   }
 
   async function cancelOrder(orderId: string) {
@@ -318,9 +380,7 @@ export function usePortalStore() {
     const curIdx = levels.indexOf(state.abilityLevel)
     state.abilityLevel = levels[Math.min(levels.length - 1, Math.max(0, curIdx) + 1)] ?? 'JS-4.5'
     state.points += 100
-    showToast(
-      `已在「${orgName}」完成晋升复测录入！五维能力图已刷新，等级晋升为 ${state.abilityLevel}（+100分）`,
-    )
+    showToast(`已在「${orgName}」完成晋升复测录入！五维能力图已刷新，等级晋升为 ${state.abilityLevel}（+100分）`)
   }
 
   function likePost(postId: string) {
@@ -372,11 +432,7 @@ export function usePortalStore() {
         dept: deptMap[payload.category] ?? '市文旅局 / 12345 城运中心',
         createdAt: '刚刚',
       }
-      await apiRequest(
-        '/feedback/complaint',
-        { method: 'POST', body: JSON.stringify(ticket) },
-        () => ticket,
-      )
+      await apiRequest('/feedback/complaint', { method: 'POST', body: JSON.stringify(ticket) }, () => ticket)
       state.complaints.unshift(ticket)
       showToast(`投诉已受理（单号 ${ticket.id}），系统已自动分办至：${ticket.dept}`)
     }
@@ -428,6 +484,11 @@ export function usePortalStore() {
     showToast,
     switchModule,
     openActionModal,
+    openNavigation,
+    closeEventModal,
+    openMatchRecap,
+    addMatchComment,
+    rateMatchPlayer,
     handleSearch,
     openPhoto,
     openBookingModal,

@@ -13,6 +13,20 @@ const themes = [
     photo: '/images/scenic.jpg',
     title: '京山打球 → 绿林山/空山洞 + 明显陵延伸线',
     desc: '热门打卡：莲山湖网红球场、美人谷、文峰河畔夜市 · 含语音导览',
+    intro: '以京山国际网球中心与文峰公园挥拍为起点，午后乘网球文旅专线畅游国家4A级绿林山美人谷与恒温溶洞空山洞，夜晚漫步文峰河畔夜市品尝小龙虾与米茶，次日更可延伸打卡世界文化遗产钟祥明显陵。',
+    openHours: '全年天天发团 · 推荐 2天1晚',
+    address: '湖北省荆门市京山市温泉街道网球大道1号（集结出发点）',
+    lng: 113.1195,
+    lat: 31.0218,
+    tags: ['官方精品网旅线', '含红土/硬地订场', '配智能语音导览', '票根享吃住85折'],
+    hotItems: [
+      { name: '绿林山美人谷 & 空山洞', price: '含景点门票', tag: '4A生态秘境', desc: '负氧离子3,200+/cm³，赛后轻徒步吸氧绝佳之选。' },
+      { name: '文峰河畔夜市 & 桥米宴', price: '含票根85折', tag: '地道风味', desc: '现焖桥米锅巴、排骨藕汤与河畔碳火夜宵。' },
+    ],
+    detailedReviews: [
+      { user: '武汉球友阿泽', origin: '武汉', score: 5.0, date: '2026-11-24', content: '上午打球下午吸氧晚上吃烧烤，两天行程张弛有度，完全不赶路，特别适合带朋友自驾来玩！' },
+      { user: '深圳球友Alex', origin: '深圳', score: 4.9, date: '2026-11-19', content: '第一次发现打完网球还能顺路逛世界遗产明显陵，客服安排得非常细致。' },
+    ],
     price: '¥498',
     extra: '/人起 · 会员9折',
     btn: '查看文旅线路',
@@ -25,6 +39,20 @@ const themes = [
     photo: '/images/coach_2.jpg',
     title: '湖北省网球学校 7 天冬夏令营 & 等级评测',
     desc: '训后可在指定机构参加五维能力晋升测试 · 含食宿与赛事体验',
+    intro: '依托全国体教融合典范——湖北省网球学校优质教练团队与31片室内风雨及红土场资源，针对6–18岁青少年与成人球友开设封闭式系统训练营，课程涵盖底线稳定性、发球动力学、战术实战与结营官方五维等级认证评测。',
+    openHours: '寒暑假 & 周末滚动开营（7天/期）',
+    address: '湖北省荆门市京山市温泉街道网球大道16号（湖北省网球学校）',
+    lng: 113.1245,
+    lat: 31.0242,
+    tags: ['省网校直营教练', '含标准营地食宿', '官方五维能力评测', '完营积+200分'],
+    hotItems: [
+      { name: '国家级教练分层小班特训', price: '每日4小时', tag: '1:4师生比', desc: '按JS等级分班教学，精准纠正发球与反手发力动作。' },
+      { name: '结营五维能力评测与证书', price: '含在营费内', tag: '官方录入', desc: '结营实测录入五维雷达图，颁发等级认证证书。' },
+    ],
+    detailedReviews: [
+      { user: '长沙欣然妈妈', origin: '长沙', score: 5.0, date: '2026-11-23', content: '孩子在省网校练了一周，动作规范太多了，结营直接通过了晋升测试，还交到了全国各地的球友！' },
+      { user: '北京林先生', origin: '北京', score: 4.9, date: '2026-11-18', content: '学校旁边就是网球公寓，家长陪读住得舒心，教练责任心很强。' },
+    ],
     price: '¥2,480',
     extra: '/期 · 积+200分',
     btn: '报名与咨询',
@@ -37,6 +65,20 @@ const themes = [
     photo: '/images/hotspring.jpg',
     title: '京山四天三晚尊享：打网球 + 泡温泉 + 运动康复',
     desc: '含6小时红土/硬地场 + 温泉主题酒店 + 专业理疗恢复 + 桥米宴',
+    intro: '京山年度口碑No.1官方旗舰度假产品！专为热爱网球又讲究身心恢复的品质球友设计：连住三晚五星/私汤温泉酒店，每天畅打红土/硬地标准场，赛后尊享天然偏硅酸温泉私汤、卫健认证运动康复筋膜松解与非遗桥米欢迎宴。',
+    openHours: '全年可订 · 四天三晚自由行/小包团',
+    address: '湖北省荆门市京山市温泉街道天沐温泉度假区',
+    lng: 113.1415,
+    lat: 31.0312,
+    tags: ['热销1,240份', '含6h高端订场', '天然矿物质私汤', '配专业运动理疗'],
+    hotItems: [
+      { name: '红土+硬地畅打6小时', price: '含灯光与陪练体验', tag: '旗舰权益', desc: '优先锁定国际网球中心与训练基地黄金时段场地。' },
+      { name: '天沐温泉 + 运动康复理疗', price: '含3晚温泉房', tag: '满血恢复', desc: '天然矿泉汤池叠加专业康复师筋膜放松，告别次日酸痛。' },
+    ],
+    detailedReviews: [
+      { user: '上海球友俱乐部陈总', origin: '上海', score: 5.0, date: '2026-11-25', content: '带俱乐部8个人订了四天三晚套餐，白天打红土晚上泡温泉再做个理疗，吃的是地道桥米宴，大家都说来年还要来！' },
+      { user: '武汉周女士', origin: '武汉', score: 4.9, date: '2026-11-20', content: '全程无缝衔接，高铁站有专车接送，几乎零操心的高品质运动度假体验。' },
+    ],
     price: '¥2,999',
     extra: '/人起 · 票根立减',
     btn: '立即预订',
@@ -71,6 +113,9 @@ const visibleThemes = computed(() =>
           @click="activeTheme = tab"
         >
           {{ tab === '全部' ? '全部主题' : tab }}
+        </button>
+        <button class="m-tab" style="background: #fff3eb; border-color: #f9c8ae; color: #c93f14" @click="state.showEventModal = true">
+          🏆 赛事重磅弹窗
         </button>
         <button class="m-tab" @click="switchModule(2)">近期赛事预告 →</button>
       </div>
@@ -167,9 +212,14 @@ const visibleThemes = computed(() =>
         <div class="card card-pad">
           <div class="flex-between" style="margin-bottom: 10px">
             <strong style="font-size: 15px">🏆 近期赛事预告 & 热门活动报名</strong>
-            <span style="font-size: 12px; color: var(--primary); font-weight: 700; cursor: pointer" @click="switchModule(2)">
-              看网球记实时比分 →
-            </span>
+            <div class="flex-row">
+              <button class="btn-ghost" style="padding: 3px 9px; font-size: 11px" @click="state.showEventModal = true">
+                📣 打开赛事弹窗
+              </button>
+              <span style="font-size: 12px; color: var(--primary); font-weight: 700; cursor: pointer" @click="switchModule(2)">
+                看网球记实时比分 →
+              </span>
+            </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 8px">
             <div class="flex-between" style="background: #f5faf8; padding: 9px 11px; border-radius: 10px">
@@ -199,10 +249,20 @@ const visibleThemes = computed(() =>
           @click="
             openPhoto({
               title: t.title,
+              category: '京山网球精品主题详情',
               photo: t.photo,
               rating: 4.9,
-              subtitle: t.desc,
-              reviews: ['“线路安排非常合理，打球、游玩和住宿体验全部在线！”'],
+              subtitle: `${t.badge} ｜ ${t.sub}`,
+              intro: t.intro,
+              openHours: t.openHours,
+              priceInfo: `${t.price}${t.extra}`,
+              address: t.address,
+              lng: t.lng,
+              lat: t.lat,
+              tags: t.tags,
+              hotItemsTitle: '✨ 主题行程核心包含与亮点',
+              hotItems: t.hotItems,
+              reviews: t.detailedReviews,
             })
           "
         >

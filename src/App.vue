@@ -2,10 +2,14 @@
 import { computed, onMounted } from 'vue'
 import ActionDetailModal from './components/ActionDetailModal.vue'
 import BookingModal from './components/BookingModal.vue'
+import CinemaDetailModal from './components/CinemaDetailModal.vue'
+import EventPopupModal from './components/EventPopupModal.vue'
 import HeroSpotlightCarousel from './components/HeroSpotlightCarousel.vue'
+import HotelDetailModal from './components/HotelDetailModal.vue'
 import ModuleKingKongBar from './components/ModuleKingKongBar.vue'
 import PhotoLightboxModal from './components/PhotoLightboxModal.vue'
 import PortalHeader from './components/PortalHeader.vue'
+import ProductDetailModal from './components/ProductDetailModal.vue'
 import TopUtilityBar from './components/TopUtilityBar.vue'
 import AmenitiesModule from './modules/amenities/AmenitiesModule.vue'
 import EntertainmentModule from './modules/entertainment/EntertainmentModule.vue'
@@ -73,6 +77,10 @@ onMounted(() => {
     <BookingModal />
     <PhotoLightboxModal />
     <ActionDetailModal />
+    <EventPopupModal />
+    <HotelDetailModal />
+    <ProductDetailModal />
+    <CinemaDetailModal />
 
     <div v-if="state.toastMessage" class="toast-banner">
       <span style="color: var(--lime)">✔</span>

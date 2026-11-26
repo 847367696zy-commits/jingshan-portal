@@ -175,8 +175,8 @@ function redeemStubAtMerchant() {
       </div>
     </div>
 
-    <!-- 4. 高德 / 百度导航弹窗 -->
-    <div v-else-if="state.actionModal.type === 'nav'" class="modal-box" style="width: 520px">
+    <!-- 4. 高德 / 百度真实坐标导航弹窗 -->
+    <div v-else-if="state.actionModal.type === 'nav'" class="modal-box" style="width: 540px">
       <div class="card-pad flex-between" style="background: #103b66; color: #fff">
         <div>
           <strong style="font-size: 16px">🗺️ 一键出行导航 · {{ state.actionModal.placeName }}</strong>
@@ -186,17 +186,35 @@ function redeemStubAtMerchant() {
         </div>
         <button class="btn-ghost" @click="close">✕ 关闭</button>
       </div>
-      <div class="card-pad" style="display: flex; flex-direction: column; gap: 12px">
+      <div class="card-pad" style="display: flex; flex-direction: column; gap: 11px">
+        <div style="background: #f5f9f7; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--ink-2)">
+          <div><strong>📍 详细地址：</strong>{{ state.actionModal.address }}</div>
+          <div style="margin-top: 4px">
+            <strong>🌐 经纬度坐标：</strong>{{ state.actionModal.lng.toFixed(4) }}°E, {{ state.actionModal.lat.toFixed(4) }}°N
+          </div>
+        </div>
         <div style="background: #fff5f5; border: 1px solid #f7c5c8; color: #a81c26; padding: 10px 12px; border-radius: 10px; font-size: 12px; font-weight: 700">
-          🚦 实时避堵提示：{{ state.actionModal.tip }}
+          🚦 实时避堵与到达提示：{{ state.actionModal.tip }}
         </div>
         <div class="grid-2" style="gap: 10px">
-          <button class="btn-primary" style="padding: 11px" @click="showToast(`已拉起高德地图导航至「${state.actionModal.placeName}」`); close()">
-            🧭 使用高德地图导航
-          </button>
-          <button class="btn-orange" style="padding: 11px" @click="showToast(`已拉起百度地图导航至「${state.actionModal.placeName}」`); close()">
-            🗺️ 使用百度地图导航
-          </button>
+          <a
+            :href="`https://uri.amap.com/marker?position=${state.actionModal.lng},${state.actionModal.lat}&name=${encodeURIComponent(state.actionModal.placeName)}`"
+            target="_blank"
+            rel="noopener"
+            class="btn-primary"
+            style="padding: 11px; text-align: center; text-decoration: none"
+          >
+            🧭 跳转高德地图导航 ↗
+          </a>
+          <a
+            :href="`https://api.map.baidu.com/marker?location=${state.actionModal.lat},${state.actionModal.lng}&title=${encodeURIComponent(state.actionModal.placeName)}&content=${encodeURIComponent(state.actionModal.address)}&output=html`"
+            target="_blank"
+            rel="noopener"
+            class="btn-orange"
+            style="padding: 11px; text-align: center; text-decoration: none"
+          >
+            🗺️ 跳转百度地图导航 ↗
+          </a>
         </div>
       </div>
     </div>

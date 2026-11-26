@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { PRODUCT_CATALOG } from '../../mock/details'
 import { usePortalStore } from '../../store/usePortalStore'
 
-const { openPhoto, openActionModal, createQuickOrder } = usePortalStore()
+const { state, openActionModal, openNavigation } = usePortalStore()
 const shopTab = ref<'全部' | '农特' | '装备' | '文创'>('全部')
 
-const products = [
-  { cat: '农特', name: '国宝京山有机桥米礼盒 (5kg)', badge: '🌾 地理标志农特', sub: '已售 3,420 盒', rating: 4.9, desc: '明代贡米原产地直发 · 球友伴手礼Top1', quote: '在京山吃过桥米饭太香了，直接商城寄了4盒回家！', price: 88, memberPrice: 79 },
-  { cat: '装备', name: '李宁碳纤维全能网球拍 & 赛事用球', badge: '🎾 李宁京山基地直供', sub: '联盟商家9折', rating: 4.9, desc: '京山网球数字产业园研发 · 场馆门店可试打', quote: '中青赛同款用球，凭会员积分直接抵扣了¥50！', price: 499, memberPrice: 449 },
-  { cat: '农特', name: '京山野生葛粉 & 绿林花菇礼盒', badge: '🌿 生态农特礼盒', sub: '快递包邮', rating: 4.8, desc: '运动后清润代餐 · 无添加手工古法制作', quote: '送长辈很体面，包装精致发货极快。', price: 69, memberPrice: 62 },
-  { cat: '文创', name: '中国网球之城 · 非遗扎染手帕 & 徽章', badge: '🎨 非遗网球文创', sub: '京山限定纪念', rating: 4.9, desc: '含萌萌手工文创、网球小熊挂件、定制速干T恤', quote: '扎染吸汗巾既实用又有京山特色，球友都问链接！', price: 49, memberPrice: 44 },
-]
-
 const visibleProducts = computed(() =>
-  shopTab.value === '全部' ? products : products.filter((p) => p.cat === shopTab.value),
+  shopTab.value === '全部'
+    ? PRODUCT_CATALOG
+    : PRODUCT_CATALOG.filter((p) => p.cat === shopTab.value),
 )
+
+function openProduct(id: string) {
+  state.activeProductId = id
+}
 </script>
 
 <template>
@@ -25,7 +25,7 @@ const visibleProducts = computed(() =>
         <div>
           <h1 class="mh-title">“购”：特色商品服务</h1>
           <div class="mh-desc">
-            京山农特产品、网球文创周边及纪念品店铺实景展示、星级评价、积分抵现与线上官方商城一键跳转入口
+            京山农特产品、李宁网球装备与非遗文创实拍展示，点击任意商品查看完整规格详情、买家真实评价与在线支付（支持积分抵现 + 票根满减）
           </div>
         </div>
       </div>
@@ -55,27 +55,36 @@ const visibleProducts = computed(() =>
     </div>
 
     <div class="grid-4 mb-16">
-      <div v-for="item in visibleProducts" :key="item.name" class="card">
+      <div v-for="item in visibleProducts" :key="item.id" class="card" style="display: flex; flex-direction: column">
         <div
           class="photo-box"
-          style="height: 165px"
-          @click="openPhoto({ title: item.name, photo: '/images/goods.jpg', rating: item.rating, subtitle: item.desc, reviews: [item.quote] })"
+          style="height: 185px"
+          @click="openProduct(item.id)"
         >
-          <img src="/images/goods.jpg" :alt="item.name" />
+          <img :src="item.photo" :alt="item.name" />
           <span class="badge-tl">{{ item.badge }}</span>
-          <span class="badge-bl">{{ item.sub }}</span>
+          <span class="badge-bl">{{ item.sub }} · 已售{{ item.sold }}</span>
         </div>
-        <div class="card-pad">
-          <div class="flex-between">
-            <strong style="font-size: 14.5px">{{ item.name }}</strong>
-            <span class="rating-pill">★ {{ item.rating }}</span>
+        <div class="card-pad" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between">
+          <div>
+            <div class="flex-between" style="align-items: flex-start; gap: 6px">
+              <strong style="font-size: 14.5px; cursor: pointer" @click="openProduct(item.id)">{{ item.name }}</strong>
+              <span class="rating-pill">★ {{ item.rating }}</span>
+            </div>
+            <div style="font-size: 11px; color: var(--ink-3); margin: 4px 0">
+              📍 {{ item.originPlace }} · {{ item.reviewCount }}条真实评价
+            </div>
+            <div class="flex-row" style="margin: 5px 0">
+              <span class="tag green">{{ item.specs.length }}种规格可选</span>
+              <span class="tag orange">支持积分/微信支付</span>
+            </div>
+            <div class="review-quote">💬 评：“{{ item.quote }}”</div>
           </div>
-          <div style="font-size: 11px; color: var(--ink-3); margin: 4px 0">{{ item.desc }}</div>
-          <div class="review-quote">💬 评：“{{ item.quote }}”</div>
-          <div class="flex-between" style="margin-top: 9px">
-            <span class="price">¥{{ item.memberPrice }}<small>原价¥{{ item.price }}</small></span>
-            <button class="btn-primary" @click="createQuickOrder('商品', item.name, '京山好物官方直发 · 全国包邮', item.memberPrice, 40)">
-              立即下单
+
+          <div class="flex-between" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line)">
+            <span class="price" style="font-size: 18px">¥{{ item.memberPrice }}<small>原价¥{{ item.price }}</small></span>
+            <button class="btn-primary" @click="openProduct(item.id)">
+              详情 / 评价 / 支付
             </button>
           </div>
         </div>
@@ -86,11 +95,24 @@ const visibleProducts = computed(() =>
       <div>
         <strong style="font-size: 14.5px">🏪 线下纪念品与特产认证店铺展示（支持到店体验 + 快递代寄）</strong>
         <div style="font-size: 12px; color: var(--ink-3); margin-top: 3px">
-          ① 国际网球中心文创旗舰店（距场馆0m · ★4.9） ｜ ② 文峰广场京山桥米体验馆（距球场400m · ★4.8） ｜ ③ 非遗扎染工坊店（★4.9）
+          ① 国际网球中心文创旗舰店（温泉街道网球大道1号 · 113.1198°E, 31.0216°N · ★4.9） ｜ ② 文峰广场京山桥米体验馆（新市街道文峰路22号 · ★4.8）
         </div>
       </div>
-      <button class="btn-ghost" @click="openActionModal({ type: 'nav', placeName: '国际网球中心文创旗舰店', distance: '150 m', driveMin: '步行约 2 分钟', tip: '门店与线上商城同价，支持凭票根满150减30并顺丰代寄回家' })">
-        🗺️ 查看门店导航
+      <button
+        class="btn-ghost"
+        @click="
+          openNavigation({
+            placeName: '国际网球中心文创旗舰店',
+            address: '湖北省荆门市京山市温泉街道网球大道1号场馆东厅',
+            lng: 113.1198,
+            lat: 31.0216,
+            distance: '150 m',
+            driveMin: '步行约 2 分钟',
+            tip: '门店与线上商城同价，支持凭票根满150减30并顺丰代寄回家',
+          })
+        "
+      >
+        🧭 查看门店导航
       </button>
     </div>
   </section>

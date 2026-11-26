@@ -135,7 +135,7 @@ button {
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 500;
   box-shadow: 0 2px 12px rgba(16, 37, 31, 0.035);
 }
 .header .container {
@@ -953,6 +953,29 @@ button {
   padding: 12px 14px;
   border: 1px solid rgba(196, 246, 61, 0.22);
 }
+.coord-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #f2f8f5;
+  border: 1px solid #dbeae3;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+  color: var(--ink-2);
+  margin: 6px 0;
+}
+.coord-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  color: var(--primary-dark);
+  background: #e3f4ec;
+  padding: 1px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 .sc-head {
   display: flex;
   justify-content: space-between;
@@ -1107,9 +1130,9 @@ button {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(8, 25, 19, 0.56);
+  background: rgba(8, 25, 19, 0.58);
   backdrop-filter: blur(4px);
-  z-index: 200;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1127,7 +1150,7 @@ button {
   position: fixed;
   right: 28px;
   bottom: 28px;
-  z-index: 300;
+  z-index: 1200;
   background: #0b251d;
   color: #fff;
   border: 1px solid rgba(196, 246, 61, 0.45);

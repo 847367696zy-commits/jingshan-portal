@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import ServiceCircleMap from '../../components/ServiceCircleMap.vue'
 import { usePortalStore } from '../../store/usePortalStore'
 
-const { state, reserveParkingOrCharger, openActionModal, showToast } = usePortalStore()
+const { state, reserveParkingOrCharger, openActionModal, openNavigation, showToast } = usePortalStore()
 const transitTab = ref<'全部' | '限行与车位' | '优质司机' | '公交与租车'>('全部')
 </script>
 
@@ -40,7 +40,17 @@ const transitTab = ref<'全部' | '限行与车位' | '优质司机' | '公交�
           </div>
           <button
             class="btn-orange"
-            @click="openActionModal({ type: 'nav', placeName: '国际网球中心 P1 推荐停车场', distance: '2.8 km', driveMin: '约 7 分钟', tip: '已自动绕行「温泉大道临时封闭段」与「京山大道限行禁停段」' })"
+            @click="
+              openNavigation({
+                placeName: '国际网球中心 P1 推荐停车场',
+                address: '湖北省荆门市京山市温泉街道网球大道北侧P1入口',
+                lng: 113.1185,
+                lat: 31.0226,
+                distance: '2.8 km',
+                driveMin: '约 7 分钟',
+                tip: '已自动绕行「温泉大道临时封闭段」与「京山大道限行禁停段」',
+              })
+            "
           >
             🗺️ 高德/百度避堵导航
           </button>
@@ -62,6 +72,9 @@ const transitTab = ref<'全部' | '限行与车位' | '优质司机' | '公交�
                 </span>
               </div>
               <div style="font-size: 11px; color: var(--ink-3); margin: 4px 0">★ {{ lot.rating }} · {{ lot.note }}</div>
+              <div style="font-size: 10.5px; color: var(--ink-2); margin-bottom: 6px">
+                📍 {{ lot.address }}（{{ lot.lng.toFixed(4) }}, {{ lot.lat.toFixed(4) }}）
+              </div>
               <div class="flex-between">
                 <button
                   :class="lot.reserved ? 'btn-ghost' : 'btn-primary'"
@@ -73,9 +86,19 @@ const transitTab = ref<'全部' | '限行与车位' | '优质司机' | '公交�
                 <button
                   class="btn-ghost"
                   style="padding: 3px 8px; font-size: 11px"
-                  @click="openActionModal({ type: 'nav', placeName: lot.name, distance: '1.2 km', driveMin: '约 4 分钟', tip: `当前实时剩余 ${lot.remain} 个，已为您避开赛期封闭路段` })"
+                  @click="
+                    openNavigation({
+                      placeName: lot.name,
+                      address: lot.address,
+                      lng: lot.lng,
+                      lat: lot.lat,
+                      distance: '1.2 km',
+                      driveMin: '约 4 分钟',
+                      tip: `当前实时剩余 ${lot.remain} 个，已为您避开赛期封闭路段`,
+                    })
+                  "
                 >
-                  导航
+                  🧭 导航
                 </button>
               </div>
             </div>
@@ -130,7 +153,21 @@ const transitTab = ref<'全部' | '限行与车位' | '优质司机' | '公交�
             <button class="btn-ghost" style="padding: 10px; text-align: left" @click="openActionModal({ type: 'miniprogram', appName: '滴滴出行小程序', desc: '自动带入京山国际网球中心上车定位，支持球友一键快车/专车' })">
               🚕 <strong>滴滴出行小程序</strong><br /><span style="font-size: 10.5px; color: var(--ink-3)">一键定位当前球场叫车</span>
             </button>
-            <button class="btn-ghost" style="padding: 10px; text-align: left" @click="openActionModal({ type: 'nav', placeName: '京山国际网球中心', distance: '3.2 km', driveMin: '约 8 分钟', tip: '高德实时导航已自动避开温泉大道赛事封闭路段' })">
+            <button
+              class="btn-ghost"
+              style="padding: 10px; text-align: left"
+              @click="
+                openNavigation({
+                  placeName: '京山国际网球中心',
+                  address: '湖北省荆门市京山市温泉街道网球大道1号',
+                  lng: 113.1195,
+                  lat: 31.0218,
+                  distance: '3.2 km',
+                  driveMin: '约 8 分钟',
+                  tip: '高德实时导航已自动避开温泉大道赛事封闭路段',
+                })
+              "
+            >
               🗺️ <strong>高德打车 / 自驾导航</strong><br /><span style="font-size: 10.5px; color: var(--ink-3)">避开赛事封闭路段导航</span>
             </button>
             <button class="btn-ghost" style="padding: 10px; text-align: left" @click="openActionModal({ type: 'miniprogram', appName: '神州租车小程序', desc: '京山南站自助取还，京山网球会员专享9折租车权益' })">

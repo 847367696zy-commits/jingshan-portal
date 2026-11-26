@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { TOUR_ROUTES } from '../../mock/data'
 import { usePortalStore } from '../../store/usePortalStore'
 
-const { state, openPhoto, openActionModal, createQuickOrder, toggleFavorite } = usePortalStore()
+const { state, openPhoto, openActionModal, openNavigation, createQuickOrder, toggleFavorite } = usePortalStore()
 const scopeFilter = ref<'全部' | '京山本地' | '荆门周边' | '湖北省内'>('全部')
 
 const visibleRoutes = computed(() =>
@@ -59,11 +59,31 @@ const visibleRoutes = computed(() =>
         <div
           class="photo-box"
           style="height: 172px"
-          @click="openPhoto({ title: route.title, photo: route.photo, rating: route.rating, subtitle: `${route.badge} ｜ ${route.audio}`, reviews: [route.quote] })"
+          @click="
+            openPhoto({
+              title: route.title,
+              category: '景区与线路详情',
+              photo: route.photo,
+              rating: route.rating,
+              subtitle: `${route.badge} ｜ ${route.audio}`,
+              intro: route.intro,
+              openHours: route.openHours,
+              priceInfo: `门票 ¥${route.price}起 · 精品套票 ¥${route.pkgPrice}`,
+              address: route.address,
+              lng: route.lng,
+              lat: route.lat,
+              tags: route.tags,
+              highlights: route.highlights,
+              hotItemsTitle: '✨ 核心必打卡景点与体验',
+              hotItems: route.hotItems,
+              navTip: `${route.badge} · 凭京山网球电子票根享专线与联票优待`,
+              reviews: route.detailedReviews,
+            })
+          "
         >
           <img :src="route.photo" :alt="route.title" />
           <span class="badge-tl">{{ route.badge }}</span>
-          <span class="badge-bl">{{ route.audio }}</span>
+          <span class="badge-bl">{{ route.audio }} · 点看景区详解</span>
         </div>
         <div class="card-pad">
           <div class="flex-between">
@@ -71,20 +91,42 @@ const visibleRoutes = computed(() =>
             <span class="rating-pill">★ {{ route.rating }}</span>
           </div>
           <div style="font-size: 11.5px; color: var(--ink-3); margin: 4px 0">{{ route.desc }}</div>
+          <div class="coord-bar">
+            <span>📍 {{ route.address }}</span>
+            <span class="coord-mono">{{ route.lng.toFixed(4) }}°E, {{ route.lat.toFixed(4) }}°N</span>
+          </div>
           <div class="review-quote">💬 游客评：“{{ route.quote }}”</div>
           <div class="flex-between" style="margin-top: 10px">
             <span class="price">¥{{ route.price }}<small>/起 · 套票¥{{ route.pkgPrice }}</small></span>
-            <div class="flex-row">
+            <div class="flex-row" style="gap: 5px">
               <button
                 class="btn-ghost"
+                style="padding: 5px 8px; font-size: 11.5px"
+                @click="
+                  openNavigation({
+                    placeName: route.title,
+                    address: route.address,
+                    lng: route.lng,
+                    lat: route.lat,
+                    distance: route.distance,
+                    driveMin: route.driveMin,
+                    tip: `${route.badge} · 凭京山网球订场电子票根可享景区联票与专线优待`,
+                  })
+                "
+              >
+                🧭 导航
+              </button>
+              <button
+                class="btn-ghost"
+                style="padding: 5px 8px; font-size: 11.5px"
                 @click="openActionModal({ type: 'audio', spotName: route.title, duration: route.duration, script: route.script, photo: route.photo })"
               >
-                🎧 语音导览
+                🎧 导览
               </button>
-              <button class="btn-ghost" @click="toggleFavorite(route.title)">
+              <button class="btn-ghost" style="padding: 5px 7px" @click="toggleFavorite(route.title)">
                 {{ state.favorites.includes(route.title) ? '❤️' : '🤍' }}
               </button>
-              <button class="btn-primary" @click="createQuickOrder('门票', route.title, `${route.audio} · 持证旅行社保障`, route.price, 60)">
+              <button class="btn-primary" style="padding: 6px 10px" @click="createQuickOrder('门票', route.title, `${route.audio} · 持证旅行社保障`, route.price, 60)">
                 预约门票
               </button>
             </div>
@@ -99,7 +141,17 @@ const visibleRoutes = computed(() =>
           <strong style="font-size: 15px">🚌 网球主题文旅专线（高铁→球场→景区串联）</strong>
           <button
             class="btn-ghost"
-            @click="openActionModal({ type: 'nav', placeName: '绿林山景区游客中心', distance: '46 km', driveMin: '约 50 分钟', tip: '文旅专线A每60分钟自国际网球中心发车，凭打球电子票根免费乘坐' })"
+            @click="
+              openNavigation({
+                placeName: '绿林山景区游客中心',
+                address: '湖北省荆门市京山市绿林镇绿林山风景区游客中心',
+                lng: 112.9762,
+                lat: 31.3418,
+                distance: '46 km',
+                driveMin: '约 50 分钟',
+                tip: '文旅专线A每60分钟自国际网球中心发车，凭打球电子票根免费乘坐',
+              })
+            "
           >
             🧭 路线导航
           </button>

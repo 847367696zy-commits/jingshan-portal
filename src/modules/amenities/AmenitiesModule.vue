@@ -3,15 +3,15 @@ import { computed, ref } from 'vue'
 import ServiceCircleMap from '../../components/ServiceCircleMap.vue'
 import { usePortalStore } from '../../store/usePortalStore'
 
-const { switchModule, openPhoto, openActionModal } = usePortalStore()
+const { switchModule, openPhoto, openNavigation } = usePortalStore()
 const amFilter = ref<'全部' | '卫生间' | '医疗点' | '充电桩' | 'ATM' | '母婴室'>('全部')
 
 const amenities = [
-  { key: '卫生间', ico: '🚻', name: '国际网球中心东广场星级公厕', photo: '/images/hotel.jpg', rating: 4.9, dist: '120m', info: '24小时开放 · 无障碍厕位 · 实时保洁达标' },
-  { key: '医疗点', ico: '🏥', name: '赛场医疗保障点 & 人民医院运动康复', photo: '/images/indoor_court.jpg', rating: 4.9, dist: '280m / 1.8km', info: '配备AED、救护车值守、24h药房导航' },
-  { key: '充电桩', ico: '⚡', name: '温泉新区智慧超充站（18个快充桩）', photo: '/images/hero.jpg', rating: 4.9, dist: '200m', info: '闲置 14 桩 · 支持与订场联动提前锁桩预约' },
-  { key: 'ATM', ico: '🏧', name: '中国银行 / 农行 24h ATM 自助点', photo: '/images/hotel.jpg', rating: 4.8, dist: '350m', info: '支持外卡取现 · 位于文峰花园酒店旁' },
-  { key: '母婴室', ico: '👶', name: '网球中心亲子母婴室（温奶/护理台）', photo: '/images/hotspring.jpg', rating: 5.0, dist: '150m', info: '恒温空调 · 独立哺乳间 · 免费饮水与急救包' },
+  { key: '卫生间', ico: '🚻', name: '国际网球中心东广场星级公厕', address: '温泉街道网球大道1号东广场入口', lng: 113.1204, lat: 31.0221, photo: '/images/hotel.jpg', rating: 4.9, dist: '120m', info: '24小时开放 · 无障碍厕位 · 实时保洁达标' },
+  { key: '医疗点', ico: '🏥', name: '赛场医疗保障点 & 人民医院运动康复', address: '温泉街道网球大道南侧医疗驿站', lng: 113.1182, lat: 31.0206, photo: '/images/indoor_court.jpg', rating: 4.9, dist: '280m / 1.8km', info: '配备AED、救护车值守、24h药房导航' },
+  { key: '充电桩', ico: '⚡', name: '温泉新区智慧超充站（18个快充桩）', address: '温泉街道温泉大道与京山大道交叉口', lng: 113.1228, lat: 31.0212, photo: '/images/hero.jpg', rating: 4.9, dist: '200m', info: '闲置 14 桩 · 支持与订场联动提前锁桩预约' },
+  { key: 'ATM', ico: '🏧', name: '中国银行 / 农行 24h ATM 自助点', address: '温泉街道京山大道128号文峰花园酒店旁', lng: 113.1149, lat: 31.0239, photo: '/images/hotel.jpg', rating: 4.8, dist: '350m', info: '支持外卡取现 · 位于文峰花园酒店旁' },
+  { key: '母婴室', ico: '👶', name: '网球中心亲子母婴室（温奶/护理台）', address: '温泉街道网球大道1号中心馆一楼西厅', lng: 113.1191, lat: 31.0217, photo: '/images/hotspring.jpg', rating: 5.0, dist: '150m', info: '恒温空调 · 独立哺乳间 · 免费饮水与急救包' },
 ]
 
 const visibleAmenities = computed(() =>
@@ -82,7 +82,26 @@ const visibleAmenities = computed(() =>
           <div
             class="photo-box"
             style="height: 68px; border-radius: 9px"
-            @click="openPhoto({ title: a.name, photo: a.photo, rating: a.rating, subtitle: `距您 ${a.dist} ｜ ${a.info}`, reviews: ['“标识清晰、环境整洁，导航一找就到！”'] })"
+            @click="
+              openPhoto({
+                title: a.name,
+                category: `便民设施详情 · ${a.key}`,
+                photo: a.photo,
+                rating: a.rating,
+                subtitle: `距您 ${a.dist} ｜ ${a.info}`,
+                intro: `${a.name}位于${a.address}，纳入京山市城运中心智慧网格巡检体系，实时保障洁净度、设备可用率与无障碍通行，外地来京球友与游客可免费或按公开标准使用。`,
+                openHours: a.key === '医疗点' ? '赛事日 07:00–22:00 / 人民医院急诊 24小时' : '全天 24 小时开放',
+                priceInfo: a.key === '充电桩' ? '电费+服务费约 ¥0.98/度（订场可提前锁桩）' : '公益便民免费开放',
+                address: a.address,
+                lng: a.lng,
+                lat: a.lat,
+                tags: ['官方网格认证', '实景核验', '一键精准导航', '支持故障上报'],
+                reviews: [
+                  { user: '武汉球友小吴', origin: '武汉', score: 5.0, date: '2026-11-24', content: '标识非常清晰、环境维护得很整洁，点一下导航两三分钟就找到了，很贴心！' },
+                  { user: '陪读家长陈女士', origin: '长沙', score: 4.9, date: '2026-11-20', content: '带小宝过来看赛，设施齐全干净，京山网球配套做得确实很细心。' },
+                ],
+              })
+            "
           >
             <img :src="a.photo" :alt="a.name" />
           </div>
@@ -91,13 +110,25 @@ const visibleAmenities = computed(() =>
               <strong style="font-size: 13.5px">{{ a.ico }} {{ a.name }}</strong>
               <span class="rating-pill">★ {{ a.rating }}</span>
             </div>
-            <div style="font-size: 11px; color: var(--ink-3); margin: 2px 0 5px">📍 距您 {{ a.dist }} ｜ {{ a.info }}</div>
+            <div style="font-size: 11px; color: var(--ink-3); margin: 2px 0 5px">
+              📍 {{ a.address }}（{{ a.lng.toFixed(4) }}°E, {{ a.lat.toFixed(4) }}°N）｜ 距您 {{ a.dist }}
+            </div>
             <div class="flex-between">
-              <span class="tag green">点击左图看实景</span>
+              <span class="tag green">{{ a.info.slice(0, 14) }}…</span>
               <button
                 class="btn-primary"
                 style="padding: 3.5px 10px; font-size: 11px"
-                @click="openActionModal({ type: 'nav', placeName: a.name, distance: a.dist, driveMin: '步行约 3 分钟', tip: a.info })"
+                @click="
+                  openNavigation({
+                    placeName: a.name,
+                    address: a.address,
+                    lng: a.lng,
+                    lat: a.lat,
+                    distance: a.dist,
+                    driveMin: '步行约 3 分钟',
+                    tip: a.info,
+                  })
+                "
               >
                 🧭 导航前往
               </button>

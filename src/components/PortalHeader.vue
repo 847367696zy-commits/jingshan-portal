@@ -41,6 +41,13 @@ const { state, memberTier, switchModule, handleSearch } = usePortalStore()
       </div>
 
       <div class="header-right">
+        <span
+          class="hdr-pill"
+          style="background: #fff3eb; border-color: #f9c8ae; color: #c93f14"
+          @click="state.showEventModal = true"
+        >
+          🏆 赛事弹窗
+        </span>
         <span class="hdr-pill" :class="{ active: state.activeModule === 11 }" @click="switchModule(11)">
           💬 互动反馈
         </span>

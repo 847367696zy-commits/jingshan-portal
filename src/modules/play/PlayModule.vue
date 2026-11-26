@@ -10,6 +10,7 @@ const {
   openPhoto,
   openBookingModal,
   openActionModal,
+  openNavigation,
   refreshLiveScores,
   createQuickOrder,
   showToast,
@@ -86,12 +87,19 @@ const filteredCourts = computed(() =>
         </div>
       </div>
       <div class="score-grid">
-        <div v-for="m in state.liveMatches" :key="m.id" class="score-card">
+        <div
+          v-for="m in state.liveMatches"
+          :key="m.id"
+          class="score-card"
+        >
           <div class="sc-head">
             <span>📍 {{ m.venue }} · <strong>{{ m.courtNo }}</strong></span>
             <span :style="{ color: m.status === '已完赛' ? 'var(--lime)' : '#FF7B6B' }">
               {{ m.status === '已完赛' ? '✅' : '🔴' }} {{ m.status }}
             </span>
+          </div>
+          <div style="font-size: 10.5px; color: rgba(255, 255, 255, 0.62); margin-bottom: 6px">
+            {{ m.round }} · 耗时 {{ m.duration }}
           </div>
           <div class="sc-row">
             <span>{{ m.playerA }}</span>
@@ -144,10 +152,26 @@ const filteredCourts = computed(() =>
             @click="
               openPhoto({
                 title: venue.name,
+                category: '网球场馆实景详情',
                 photo: venue.photo,
                 rating: venue.rating,
-                subtitle: `开放时间：${venue.openHours} ｜ ${venue.priceDesc}`,
-                reviews: [venue.quote, '“场地平整、扫码自动开灯，配套停车场和充电桩很省心！”'],
+                subtitle: `${venue.region} ｜ ${venue.reviewCount}条球友真实评价`,
+                intro: `${venue.name}采用国际网联(ITF)赛事级场地涂装与防眩光专业灯光，支持扫码自助开灯、实时视频画面查看与开场前2小时免费取消；订场同时可一键联动锁位${venue.parkingName}与${venue.chargerName}，完赛自动激活79家联盟商家电子票根。`,
+                openHours: venue.openHours,
+                priceInfo: venue.priceDesc,
+                address: venue.address,
+                lng: venue.lng,
+                lat: venue.lat,
+                tags: venue.tags,
+                hotItemsTitle: '🎾 场馆核心配套与特色服务',
+                hotItems: [
+                  { name: '订场联动停车预约', price: `剩余 ${venue.parkingRemain} 位`, tag: '免费停3h', desc: venue.parkingName },
+                  { name: '120kW 智慧快充联动', price: `闲置 ${venue.chargerRemain} 桩`, tag: '打球即满电', desc: venue.chargerName },
+                ],
+                reviews: [
+                  { user: '武汉球友老林', origin: '武汉', score: 5.0, date: '2026-11-24', content: venue.quote.replace(/^.*评：“|”$/g, '') },
+                  { user: '长沙球友小郑', origin: '长沙', score: 4.9, date: '2026-11-21', content: '场地弹性与夜间灯光都是一流水平，更衣室热水充足，周边吃住走几步就能搞定！' },
+                ],
               })
             "
           >
@@ -161,7 +185,7 @@ const filteredCourts = computed(() =>
               <span class="rating-pill">★ {{ venue.rating }} ({{ venue.reviewCount }}条评价)</span>
             </div>
             <div style="font-size: 11.5px; color: var(--ink-3); margin: 3px 0">
-              📍 {{ venue.region }} ｜ 🕒 开放：{{ venue.openHours }} ｜ 💰 {{ venue.priceDesc }}
+              📍 {{ venue.address }}（<span class="coord-mono">{{ venue.lng.toFixed(4) }}°E, {{ venue.lat.toFixed(4) }}°N</span>）｜ 🕒 {{ venue.openHours }} ｜ 💰 {{ venue.priceDesc }}
             </div>
             <div class="slots-4">
               <div
@@ -201,6 +225,22 @@ const filteredCourts = computed(() =>
                 🎫 查看「网球联盟电子票根」
               </span>
               <div class="flex-row">
+                <button
+                  class="btn-ghost"
+                  @click="
+                    openNavigation({
+                      placeName: venue.name.split('（')[0] ?? venue.name,
+                      address: venue.address,
+                      lng: venue.lng,
+                      lat: venue.lat,
+                      distance: '2.5 km',
+                      driveMin: '约 6 分钟',
+                      tip: `支持联动预约 ${venue.parkingName} 与 ${venue.chargerName}`,
+                    })
+                  "
+                >
+                  🧭 导航
+                </button>
                 <button
                   class="btn-ghost"
                   @click="openActionModal({ type: 'livecam', venueName: venue.name, photo: venue.photo, viewers: venue.liveViewers })"
@@ -251,7 +291,17 @@ const filteredCourts = computed(() =>
             <button
               class="btn-ghost"
               style="padding: 4px 9px; font-size: 11px"
-              @click="openActionModal({ type: 'nav', placeName: '京山国际网球中心', distance: '3.2 km', driveMin: '约 8 分钟', tip: '温泉大道东段赛事临时封闭，系统已为您规划从京山大道西入口直达 P1 停车场' })"
+              @click="
+                openNavigation({
+                  placeName: '京山国际网球中心',
+                  address: '湖北省荆门市京山市温泉街道网球大道1号',
+                  lng: 113.1195,
+                  lat: 31.0218,
+                  distance: '3.2 km',
+                  driveMin: '约 8 分钟',
+                  tip: '温泉大道东段赛事临时封闭，系统已为您规划从京山大道西入口直达 P1 停车场',
+                })
+              "
             >
               🗺️ 跳转高德/百度导航
             </button>
@@ -292,7 +342,31 @@ const filteredCourts = computed(() =>
         <div
           class="photo-box"
           style="height: 105px; border-radius: 10px; margin-bottom: 8px"
-          @click="openPhoto({ title: '陈浩 · 金网认证5.0陪练达人', photo: '/images/coach_1.jpg', rating: 5.0, subtitle: '累计接单 326 场 · 零投诉 · 支持多球喂球与3人拼陪练', reviews: ['“喂球极稳，帮我针对五维图网前弱项特训！”'] })"
+          @click="
+            openPhoto({
+              title: '陈浩 · 金网认证5.0陪练达人',
+              category: '金网认证陪练详情',
+              photo: '/images/coach_1.jpg',
+              rating: 5.0,
+              subtitle: '累计接单 326 场 · 零投诉 · 前省级青年队主力',
+              intro: '持有中国网协(CTA)高级教练与金网5.0陪练认证，擅长根据学员五维能力雷达图弱项制定针对性多球喂球与实战拉练方案，支持1对1高强度对抗或2–3人球友拼单陪练。',
+              openHours: '08:00 – 21:30（支持提前预约）',
+              priceInfo: '标准价 ¥180/时 · Lv.3会员 ¥162/时 · 完课积+80分',
+              address: '京山国际网球中心 / 训练基地 / 文峰公园均可上门',
+              lng: 113.1195,
+              lat: 31.0218,
+              tags: ['金网5.0认证', '零差评口碑', '支持多人拼单', '免费赛后视频复盘'],
+              hotItemsTitle: '🎾 热门约练项目',
+              hotItems: [
+                { name: '底线稳定性与多球喂球', price: '¥162/时', tag: '人气最旺', desc: '高频率精准喂球，快速固化正反手引拍与击球节奏。' },
+                { name: '网前截击与双打站位特训', price: '¥162/时', tag: '晋升必练', desc: '针对性补齐五维图网前短板，助力通过晋升复测。' },
+              ],
+              reviews: [
+                { user: '武汉球友林先生', origin: '武汉', score: 5.0, date: '2026-11-24', content: '喂球落点稳得像发球机，还会边打边提醒脚步重心，练了两节截击成功率翻倍！' },
+                { user: '长沙小王', origin: '长沙', score: 5.0, date: '2026-11-19', content: '态度特别好，打完还免费帮我录了一段慢动作发球视频分析问题，物超所值！' },
+              ],
+            })
+          "
         >
           <img src="/images/coach_1.jpg" alt="陪练" />
           <span class="badge-tl">★ 5.0 认证陪练</span>
