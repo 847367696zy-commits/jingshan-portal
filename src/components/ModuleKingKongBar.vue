@@ -14,7 +14,7 @@ interface MainTile {
 }
 
 const mainTiles: MainTile[] = [
-  { id: 1, title: '首页总览', sub: '名片/宣传片/活动', bg: 'linear-gradient(135deg,#0E8F67,#085F44)', badge: '总览', badgeBg: '#0D7A58' },
+  { id: 1, title: '首页总览', sub: '名片/主题/热点', bg: 'linear-gradient(135deg,#0E8F67,#085F44)', badge: '总览', badgeBg: '#0D7A58' },
   { id: 2, title: '打 · 场地服务', sub: '订场/比分/陪练', bg: 'linear-gradient(135deg,#10996D,#0A6B4D)', badge: '实时余量', badgeBg: '#FF5D2A' },
   { id: 3, title: '游 · 旅游游览', sub: '延伸线/语音导览', bg: 'linear-gradient(135deg,#2EB36A,#168249)', badge: '全域游', badgeBg: '#168249' },
   { id: 4, title: '吃 · 美食服务', sub: '菜单/团餐/票根券', bg: 'linear-gradient(135deg,#F25C43,#C93722)', badge: '票根85折', badgeBg: '#E44717' },
@@ -87,8 +87,8 @@ const mainTiles: MainTile[] = [
 
         <div class="kk-row-sub">
           <div class="kk-sub-left">
-            <span class="tag green">👆 点击任意模块图标</span>
-            <span>下方工作区实时切换对应完整业务内容（严格对照《表3》13项清单）</span>
+            <span class="tag green">👆 先看摘要 · 再进专区</span>
+            <span>点击任意板块先在下方固定容器预览热门摘要，点击容器底部入口即可新窗口查看全部数据</span>
           </div>
           <div class="kk-sub-pills">
             <button

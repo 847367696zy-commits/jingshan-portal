@@ -63,8 +63,13 @@ const pkgPeople = ref('2人同行')
 function submitCourtQuery() {
   state.courtSurfaceFilter = courtSurface.value
   state.courtRegionFilter = courtRegion.value
-  switchModule(2)
-  showToast(`已按「${courtDate.value} / ${courtSurface.value} / ${courtRegion.value}」筛选出今日空闲球场`)
+  switchModule(2, {
+    surface: courtSurface.value,
+    region: courtRegion.value,
+  })
+  const stageEl = document.getElementById('moduleStageAnchor')
+  stageEl?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  showToast(`已按「${courtDate.value} / ${courtSurface.value} / ${courtRegion.value}」切换下方热门球场概览`)
 }
 
 function submitQuickEvent() {

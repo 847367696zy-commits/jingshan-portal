@@ -5,11 +5,13 @@ import BookingModal from './components/BookingModal.vue'
 import CinemaDetailModal from './components/CinemaDetailModal.vue'
 import EventPopupModal from './components/EventPopupModal.vue'
 import HeroSpotlightCarousel from './components/HeroSpotlightCarousel.vue'
+import HomeSummaryStage from './components/HomeSummaryStage.vue'
 import HotelDetailModal from './components/HotelDetailModal.vue'
 import ModuleKingKongBar from './components/ModuleKingKongBar.vue'
 import PhotoLightboxModal from './components/PhotoLightboxModal.vue'
 import PortalHeader from './components/PortalHeader.vue'
 import ProductDetailModal from './components/ProductDetailModal.vue'
+import SubPageNavBar from './components/SubPageNavBar.vue'
 import TopUtilityBar from './components/TopUtilityBar.vue'
 import AmenitiesModule from './modules/amenities/AmenitiesModule.vue'
 import EntertainmentModule from './modules/entertainment/EntertainmentModule.vue'
@@ -56,16 +58,27 @@ onMounted(() => {
     <TopUtilityBar />
     <PortalHeader />
 
-    <!-- 核心热点/赛事/活动轮播宣传区 + 右侧三合一快捷办理卡 -->
-    <HeroSpotlightCarousel />
+    <!-- 首页模式：顶部焦点轮播 + 金刚区 + 下方固定热门概览容器 -->
+    <template v-if="!state.isStandalonePage">
+      <!-- 核心热点/赛事/活动轮播宣传区 + 右侧三合一快捷办理卡 -->
+      <HeroSpotlightCarousel />
 
-    <!-- 13 模块可点击切换金刚区 -->
-    <ModuleKingKongBar />
+      <!-- 13 模块切换摘要金刚区 -->
+      <ModuleKingKongBar />
 
-    <!-- 当前模块专属工作台 -->
-    <main id="moduleStageAnchor" class="container stage-wrap" style="scroll-margin-top: 90px">
-      <component :is="activeComponent" />
-    </main>
+      <!-- 下方固定容器：按当前选中板块展示精炼摘要，并提供新窗口完整页面跳转入口 -->
+      <main id="moduleStageAnchor" class="container stage-wrap" style="scroll-margin-top: 90px">
+        <HomeSummaryStage />
+      </main>
+    </template>
+
+    <!-- 独立专区页面（新窗口打开）：顶部面包屑导航 + 完整业务模块工作台 -->
+    <template v-else>
+      <SubPageNavBar />
+      <main id="moduleStageAnchor" class="container stage-wrap subpage-stage" style="scroll-margin-top: 90px">
+        <component :is="activeComponent" />
+      </main>
+    </template>
 
     <footer class="footer">
       <div class="container footer-row">

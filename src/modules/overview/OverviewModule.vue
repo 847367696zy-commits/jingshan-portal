@@ -1,9 +1,24 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { ENTERTAINMENT_ITEMS, RESTAURANT_MENUS, TOUR_ROUTES } from '../../mock/data'
+import { HOTEL_PROFILES, PRODUCT_CATALOG } from '../../mock/details'
 import { usePortalStore } from '../../store/usePortalStore'
+import type { ModuleId } from '../../types/portal'
 
-const { state, switchModule, openPhoto, openActionModal } = usePortalStore()
+const {
+  state,
+  activeOrdersCount,
+  openModulePage,
+  openPhoto,
+  openBookingModal,
+  openActionModal,
+} = usePortalStore()
+
 const activeTheme = ref<'全部' | '网球+文旅' | '网球+研学' | '网球+康养'>('全部')
+
+function openNewPage(id: ModuleId) {
+  openModulePage(id, { newWindow: true })
+}
 
 const themes = [
   {
@@ -29,7 +44,7 @@ const themes = [
     ],
     price: '¥498',
     extra: '/人起 · 会员9折',
-    btn: '查看文旅线路',
+    btn: '文旅专区 ↗',
     target: 3 as const,
   },
   {
@@ -55,7 +70,7 @@ const themes = [
     ],
     price: '¥2,480',
     extra: '/期 · 积+200分',
-    btn: '报名与咨询',
+    btn: '研学专区 ↗',
     target: 9 as const,
   },
   {
@@ -81,26 +96,93 @@ const themes = [
     ],
     price: '¥2,999',
     extra: '/人起 · 票根立减',
-    btn: '立即预订',
+    btn: '立即查看 ↗',
     target: 3 as const,
     orange: true,
   },
 ]
 
+const hotRestaurants = [
+  {
+    name: '桥米公馆 · 京山非遗特色鄂菜',
+    photo: '/images/cuisine.jpg',
+    badge: '票根85折',
+    dist: '距国际网球中心 600m',
+    rating: 4.9,
+    avg: 78,
+    summary: '国宝桥米锅巴 · 洪湖排骨藕汤 · 惠亭湖刁子鱼',
+    address: '湖北省荆门市京山市温泉街道京山大道96号',
+    lng: 113.1168,
+    lat: 31.0226,
+  },
+  {
+    name: '绿林山水农家土菜馆',
+    photo: '/images/scenic.jpg',
+    badge: '满100减25',
+    dist: '绿林山景区入口 200m',
+    rating: 4.8,
+    avg: 65,
+    summary: '绿林山泉土鸡汤 · 农家腊肉炒春笋 · 柴火桥米饭',
+    address: '湖北省荆门市京山市绿林镇绿林山风景区南门200米处',
+    lng: 112.9781,
+    lat: 31.3402,
+  },
+  {
+    name: '文峰河畔老字号碳火烧烤 & 轻食街',
+    photo: '/images/night_market.jpg',
+    badge: '票根赠米茶',
+    dist: '距文峰公园球场 300m',
+    rating: 4.9,
+    avg: 58,
+    summary: '秘制油焖小龙虾 · 现烤鲜牛肉串 · 赛后轻食沙拉',
+    address: '湖北省荆门市京山市新市街道文峰河滨夜市街区A区12号',
+    lng: 113.1135,
+    lat: 31.0172,
+  },
+]
+
+const hotHotels = computed(() => HOTEL_PROFILES.slice(0, 3))
+const hotProducts = computed(() => PRODUCT_CATALOG.slice(0, 2))
+const hotEntertainments = computed(() => [ENTERTAINMENT_ITEMS[3]!, ENTERTAINMENT_ITEMS[5]!])
+
 const visibleThemes = computed(() =>
   activeTheme.value === '全部' ? themes : themes.filter((t) => t.key === activeTheme.value),
 )
+
+const totalRemainingSlots = computed(() =>
+  state.courts.reduce(
+    (sum, c) => sum + c.slots.reduce((s, slot) => s + slot.remaining, 0),
+    0,
+  ),
+)
+
+function openRestaurantMenu(r: (typeof hotRestaurants)[number]) {
+  openActionModal({
+    type: 'menu',
+    shopName: r.name,
+    dishes: RESTAURANT_MENUS[r.name] ?? [],
+    dist: r.dist,
+    address: r.address,
+    lng: r.lng,
+    lat: r.lat,
+  })
+}
+
+function getLowestRoom(hotel: (typeof HOTEL_PROFILES)[number]) {
+  return hotel.rooms[0]!
+}
 </script>
 
 <template>
-  <section>
+  <section class="home-fixed-overview">
+    <!-- 01 首页总览与网球主题专区 -->
     <div class="module-header">
       <div class="mh-left">
         <div class="mh-num">01</div>
         <div>
-          <h1 class="mh-title">首页总览与网球主题专区</h1>
+          <h1 class="mh-title">首页总览与全城热门精选</h1>
           <div class="mh-desc">
-            京山网球城市名片、宣传片、城市导览、三大精品网旅主题（文旅/研学/康养）、近期赛事预告、活动弹窗与快捷订场入口
+            下方固定展示京山城市名片、三大网旅主题及吃住行游购娱训打热门概览；点击各专区「查看全部 ↗」将在新窗口打开完整页面
           </div>
         </div>
       </div>
@@ -117,7 +199,7 @@ const visibleThemes = computed(() =>
         <button class="m-tab" style="background: #fff3eb; border-color: #f9c8ae; color: #c93f14" @click="state.showEventModal = true">
           🏆 赛事重磅弹窗
         </button>
-        <button class="m-tab" @click="switchModule(2)">近期赛事预告 →</button>
+        <button class="m-tab" @click="openNewPage(2)">完整赛况大厅 ↗</button>
       </div>
     </div>
 
@@ -175,12 +257,12 @@ const visibleThemes = computed(() =>
           <div class="flex-row">
             <span class="tag green">🎾 快捷订场入口</span>
             <span style="font-size: 12.5px; font-weight: 700">
-              今日全市空闲可约 <strong style="color: var(--primary)">84 片</strong> · 同步预约车位与充电桩
+              今日全市空闲可约 <strong style="color: var(--primary)">84 片</strong> · 热门场馆余 {{ totalRemainingSlots }} 个时段
             </span>
           </div>
           <div class="flex-row">
-            <button class="btn-primary" @click="switchModule(2)">立即去订场 →</button>
-            <button class="btn-ghost" @click="switchModule(13)">查看我的 {{ state.abilityLevel }} 能力卡</button>
+            <button class="btn-primary" @click="openNewPage(2)">进入订场专区 ↗</button>
+            <button class="btn-ghost" @click="openNewPage(13)">我的 {{ state.abilityLevel }} 能力卡 ↗</button>
           </div>
         </div>
       </div>
@@ -190,7 +272,7 @@ const visibleThemes = computed(() =>
           <div class="flex-between" style="margin-bottom: 8px">
             <span class="tag orange">🎉 热门活动弹窗 · 2026京山网球公开赛重磅福利</span>
             <button style="border: none; background: transparent; font-size: 11px; color: var(--ink-3)" @click="state.showActivityPopup = false">
-              ✕ 关闭弹窗
+              ✕ 收起
             </button>
           </div>
           <div style="font-size: 16.5px; font-weight: 900; color: #472500; margin-bottom: 5px">
@@ -201,7 +283,7 @@ const visibleThemes = computed(() =>
           </div>
           <div class="flex-between">
             <div class="flex-row"><span class="tag gold">房管局官方认证</span><span class="tag green">含网球公寓长短租</span></div>
-            <button class="btn-orange" @click="switchModule(5)">查看购房减5万与公寓 →</button>
+            <button class="btn-orange" @click="openNewPage(5)">查看购房减5万与公寓 ↗</button>
           </div>
         </div>
         <div v-else class="card card-pad flex-between" style="background: #fff9ef">
@@ -216,9 +298,7 @@ const visibleThemes = computed(() =>
               <button class="btn-ghost" style="padding: 3px 9px; font-size: 11px" @click="state.showEventModal = true">
                 📣 打开赛事弹窗
               </button>
-              <span style="font-size: 12px; color: var(--primary); font-weight: 700; cursor: pointer" @click="switchModule(2)">
-                看网球记实时比分 →
-              </span>
+              <button class="home-more-link" @click="openNewPage(2)">看网球记实时比分 ↗</button>
             </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 8px">
@@ -227,21 +307,22 @@ const visibleThemes = computed(() =>
                 <div style="font-size: 13px; font-weight: 800">2026中国青少年网球巡回赛总决赛 <span class="tag red">进行中</span></div>
                 <div style="font-size: 11px; color: var(--ink-3)">11/24–12/3 · 国际网球中心 · 观赛116.3万 · 实时比分同步</div>
               </div>
-              <button class="btn-primary" @click="switchModule(2)">查赛况/交通</button>
+              <button class="btn-primary" @click="openNewPage(2)">查赛况 ↗</button>
             </div>
             <div class="flex-between" style="background: #fff8f4; padding: 9px 11px; border-radius: 10px">
               <div>
                 <div style="font-size: 13px; font-weight: 800">京山网球周末分级赛（匹配 {{ state.abilityLevel }} 组） <span class="tag orange">余12位</span></div>
                 <div style="font-size: 11px; color: var(--ink-3)">11/29 文峰公园 · 完赛积+120分 · 赠联盟商家票根折扣券</div>
               </div>
-              <button class="btn-orange" @click="switchModule(2)">一键报名</button>
+              <button class="btn-orange" @click="openNewPage(2)">去报名 ↗</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="grid-3">
+    <!-- 三大精品主题 -->
+    <div class="grid-3 mb-24">
       <div v-for="t in visibleThemes" :key="t.key" class="card">
         <div
           class="photo-box"
@@ -275,10 +356,418 @@ const visibleThemes = computed(() =>
           <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 10px">{{ t.desc }}</div>
           <div class="flex-between">
             <span class="price">{{ t.price }}<small>{{ t.extra }}</small></span>
-            <button :class="t.orange ? 'btn-orange' : 'btn-primary'" @click="switchModule(t.target)">{{ t.btn }}</button>
+            <button :class="t.orange ? 'btn-orange' : 'btn-primary'" @click="openNewPage(t.target)">{{ t.btn }}</button>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 02 热门球场 & 实时赛况概览（打 · 场地服务） -->
+    <div class="home-section-block mb-24">
+      <div class="home-sec-head">
+        <div class="home-sec-left">
+          <span class="home-sec-badge" style="background: linear-gradient(135deg, #10996d, #0a6b4d)">打</span>
+          <div>
+            <h2 class="home-sec-title">热门球场推荐 & 中青赛实时赛况概览</h2>
+            <div class="home-sec-sub">精选全市 3 座人气场馆实时余量与焦点比分 · 完整地图检索、陪练约球与全城 356 片球场请进入专区查看</div>
+          </div>
+        </div>
+        <button class="home-jump-btn" @click="openNewPage(2)">
+          查看全部球场与实时比分（356片） ↗
+        </button>
+      </div>
+
+      <!-- 实时焦点比分横栏 -->
+      <div class="home-live-strip mb-16">
+        <div class="flex-between" style="margin-bottom: 10px">
+          <div class="flex-row">
+            <span class="tag" style="background: var(--lime); color: #0b251d">📊 网球记实时比分</span>
+            <span style="font-size: 12.5px; color: rgba(255, 255, 255, 0.86)">2026中青赛总决赛焦点对阵 · 实时同步各场馆赛况</span>
+          </div>
+          <button class="home-live-jump" @click="openNewPage(2)">进入赛况与技术统计大厅 ↗</button>
+        </div>
+        <div class="score-grid">
+          <div v-for="m in state.liveMatches" :key="m.id" class="score-card" style="cursor: pointer" @click="openNewPage(2)">
+            <div class="sc-head">
+              <span>📍 {{ m.venue }} · <strong>{{ m.courtNo }}</strong></span>
+              <span :style="{ color: m.status === '已完赛' ? 'var(--lime)' : '#FF7B6B' }">
+                {{ m.status === '已完赛' ? '✅' : '🔴' }} {{ m.status }}
+              </span>
+            </div>
+            <div class="sc-row">
+              <span>{{ m.playerA }}</span>
+              <div class="sc-sets">
+                <span v-for="(s, idx) in m.setsA" :key="idx" :class="{ cur: idx > 0 && m.status !== '已完赛' }">{{ s }}</span>
+              </div>
+            </div>
+            <div class="sc-row">
+              <span>{{ m.playerB }}</span>
+              <div class="sc-sets">
+                <span v-for="(s, idx) in m.setsB" :key="idx">{{ s }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 3 热门球场精选 -->
+      <div class="grid-3">
+        <div v-for="venue in state.courts.slice(0, 3)" :key="venue.id" class="card home-hot-card">
+          <div
+            class="photo-box"
+            style="height: 158px"
+            @click="
+              openPhoto({
+                title: venue.name,
+                category: '京山热门网球场馆',
+                photo: venue.photo,
+                rating: venue.rating,
+                subtitle: `${venue.region} ｜ 开放时间 ${venue.openHours}`,
+                intro: venue.quote,
+                openHours: venue.openHours,
+                priceInfo: venue.priceDesc,
+                address: venue.address,
+                lng: venue.lng,
+                lat: venue.lat,
+                tags: venue.tags,
+                reviews: [venue.quote],
+              })
+            "
+          >
+            <img :src="venue.photo" :alt="venue.name" />
+            <span class="badge-tl"><span class="live-dot" />实况 {{ venue.liveViewers }} 人在看</span>
+            <span class="badge-bl">★ {{ venue.rating }} · {{ venue.region }}</span>
+          </div>
+          <div class="card-pad">
+            <div class="flex-between" style="margin-bottom: 4px">
+              <strong style="font-size: 14.5px; line-height: 1.3">{{ venue.name }}</strong>
+            </div>
+            <div style="font-size: 11.5px; color: var(--ink-3); margin-bottom: 8px">
+              ⏰ {{ venue.openHours }} · {{ venue.priceDesc }}
+            </div>
+            <div class="home-slot-preview">
+              <button
+                v-for="slot in venue.slots.slice(0, 2)"
+                :key="slot.time"
+                class="home-slot-chip"
+                @click="
+                  openBookingModal({
+                    venueId: venue.id,
+                    venueName: venue.name,
+                    slotTime: slot.time,
+                    price: slot.price,
+                    memberPrice: slot.memberPrice,
+                    parkingName: venue.parkingName,
+                    chargerName: venue.chargerName,
+                  })
+                "
+              >
+                <strong>今日 {{ slot.time }}</strong>
+                <span>¥{{ slot.memberPrice }} · 余{{ slot.remaining }}片</span>
+              </button>
+            </div>
+            <div class="flex-between" style="margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--line)">
+              <span style="font-size: 11px; color: var(--primary); font-weight: 700">
+                🅿️ 车位剩{{ venue.parkingRemain }} · ⚡ 桩闲{{ venue.chargerRemain }}
+              </span>
+              <button class="home-more-link" @click="openNewPage(2)">全部时段与地图 ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 吃 · 热门美食 & 住 · 精选住宿（双栏热门概览） -->
+    <div class="grid-2 mb-24">
+      <!-- 吃 · 美食服务概览 -->
+      <div class="card card-pad home-panel">
+        <div class="flex-between mb-16">
+          <div class="home-sec-left">
+            <span class="home-sec-badge" style="background: linear-gradient(135deg, #f25c43, #c93722)">吃</span>
+            <div>
+              <h2 class="home-panel-title">热门美食与票根联盟精选</h2>
+              <div class="home-sec-sub">精选 3 家球友高分口碑店 · 完整菜单、赛事团餐请看专区</div>
+            </div>
+          </div>
+          <button class="home-jump-btn sm" @click="openNewPage(4)">全部美食 ↗</button>
+        </div>
+
+        <div class="home-mini-list">
+          <div
+            v-for="r in hotRestaurants"
+            :key="r.name"
+            class="home-mini-item"
+            @click="openRestaurantMenu(r)"
+          >
+            <img :src="r.photo" :alt="r.name" class="home-mini-thumb" />
+            <div class="home-mini-body">
+              <div class="flex-between">
+                <strong class="home-mini-name">{{ r.name }}</strong>
+                <span class="rating-pill">★ {{ r.rating }}</span>
+              </div>
+              <div class="home-mini-desc">{{ r.summary }}</div>
+              <div class="flex-between" style="margin-top: 4px">
+                <div class="flex-row" style="gap: 5px">
+                  <span class="tag orange">{{ r.badge }}</span>
+                  <span style="font-size: 11px; color: var(--ink-3)">{{ r.dist }}</span>
+                </div>
+                <span style="font-size: 13px; font-weight: 900; color: var(--accent)">人均 ¥{{ r.avg }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 住 · 住宿服务概览 -->
+      <div class="card card-pad home-panel">
+        <div class="flex-between mb-16">
+          <div class="home-sec-left">
+            <span class="home-sec-badge" style="background: linear-gradient(135deg, #3385f0, #195cc2)">住</span>
+            <div>
+              <h2 class="home-panel-title">精选网球公寓与联盟酒店</h2>
+              <div class="home-sec-sub">短长租公寓、温泉私汤与房管局购房减5万 · 全市 6 家精选</div>
+            </div>
+          </div>
+          <button class="home-jump-btn sm" @click="openNewPage(5)">全部住宿(6家) ↗</button>
+        </div>
+
+        <div class="home-mini-list">
+          <div
+            v-for="hotel in hotHotels"
+            :key="hotel.id"
+            class="home-mini-item"
+            @click="state.activeHotelId = hotel.id"
+          >
+            <img :src="hotel.photo" :alt="hotel.name" class="home-mini-thumb" />
+            <div class="home-mini-body">
+              <div class="flex-between">
+                <strong class="home-mini-name">{{ hotel.name }}</strong>
+                <span class="rating-pill">★ {{ hotel.rating }}</span>
+              </div>
+              <div class="home-mini-desc">{{ hotel.distanceToCourt }} · 共 {{ hotel.rooms.length }} 种房型</div>
+              <div class="flex-between" style="margin-top: 4px">
+                <span class="tag blue">{{ hotel.category === '公寓' ? '短/长租公寓' : hotel.category }}</span>
+                <div>
+                  <s style="font-size: 10.5px; color: #9aa7a2; margin-right: 4px">¥{{ getLowestRoom(hotel).originalPrice }}</s>
+                  <strong style="font-size: 14px; color: var(--accent)">
+                    ¥{{ getLowestRoom(hotel).eventPrice }}<small style="font-size: 10.5px; font-weight: 500; color: var(--ink-3)">{{ getLowestRoom(hotel).leaseUnit }}起</small>
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 游 · 全域网旅线路概览 -->
+    <div class="home-section-block mb-24">
+      <div class="home-sec-head">
+        <div class="home-sec-left">
+          <span class="home-sec-badge" style="background: linear-gradient(135deg, #2eb36a, #168249)">游</span>
+          <div>
+            <h2 class="home-sec-title">全域网旅延伸线路概览</h2>
+            <div class="home-sec-sub">已结合来源地「{{ state.origin }}」精选京山本地 / 荆门周边 / 湖北省内三大圈层代表线路</div>
+          </div>
+        </div>
+        <button class="home-jump-btn" @click="openNewPage(3)">查看全部线路与智能语音导览 ↗</button>
+      </div>
+
+      <div class="grid-3">
+        <div v-for="route in TOUR_ROUTES" :key="route.id" class="card home-hot-card">
+          <div
+            class="photo-box"
+            style="height: 148px"
+            @click="
+              openPhoto({
+                title: route.title,
+                category: '京山全域网旅延伸线路',
+                photo: route.photo,
+                rating: route.rating,
+                subtitle: `${route.badge} ｜ ${route.audio}`,
+                intro: route.intro,
+                openHours: route.openHours,
+                priceInfo: `门票/套餐 ¥${route.price} 起`,
+                address: route.address,
+                lng: route.lng,
+                lat: route.lat,
+                tags: route.tags,
+                highlights: route.highlights,
+                hotItemsTitle: '🌟 线路热门打卡点',
+                hotItems: route.hotItems,
+                reviews: route.detailedReviews,
+              })
+            "
+          >
+            <img :src="route.photo" :alt="route.title" />
+            <span class="badge-tl">{{ route.scope }} · {{ route.duration }}</span>
+            <span class="badge-bl">★ {{ route.rating }} · {{ route.distance }}</span>
+          </div>
+          <div class="card-pad">
+            <strong style="font-size: 14.5px; display: block; margin-bottom: 4px">{{ route.title }}</strong>
+            <div style="font-size: 11.5px; color: var(--ink-3); margin-bottom: 10px">{{ route.desc }}</div>
+            <div class="flex-between">
+              <span class="price" style="font-size: 18px">¥{{ route.price }}<small>/人起</small></span>
+              <div class="flex-row" style="gap: 6px">
+                <button
+                  class="btn-ghost"
+                  style="padding: 5px 9px; font-size: 11.5px"
+                  @click="openActionModal({ type: 'audio', spotName: route.title, duration: route.duration, script: route.script, photo: route.photo })"
+                >
+                  🎧 试听
+                </button>
+                <button class="btn-primary" style="padding: 5px 10px; font-size: 11.5px" @click="openNewPage(3)">详情 ↗</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 行 · 购 · 娱 · 训 四大板块热门速览 -->
+    <div class="home-section-block mb-24">
+      <div class="home-sec-head">
+        <div class="home-sec-left">
+          <span class="home-sec-badge" style="background: linear-gradient(135deg, #0d7a58, #085940)">全</span>
+          <div>
+            <h2 class="home-sec-title">行 · 购 · 娱 · 训 核心业务概览</h2>
+            <div class="home-sec-sub">实时掌握赛期交通车位、京山好物热榜、温泉影城娱乐与省网校培训动态，点击卡片底部入口新窗口查看全部</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <!-- 行 · 出行服务 -->
+        <div class="card card-pad home-quad-card">
+          <div class="flex-between mb-10">
+            <span class="tag blue">🚦 行 · 出行服务</span>
+            <span style="font-size: 11px; color: var(--red); font-weight: 700">赛期管控提示</span>
+          </div>
+          <strong style="font-size: 15px; display: block; margin-bottom: 6px">车位充电实时余量 & 限行指引</strong>
+          <div class="home-quad-alert">温泉大道网球中心段 07:30–19:00 临时封闭，建议停靠 P1/P2</div>
+          <div class="home-quad-list">
+            <div v-for="lot in state.parkingLots" :key="lot.id" class="home-quad-row">
+              <span>{{ lot.isCharger ? '⚡' : '🅿️' }} {{ lot.name }}</span>
+              <strong :style="{ color: lot.isCharger ? 'var(--blue)' : 'var(--primary)' }">
+                {{ lot.isCharger ? '闲' : '剩' }}{{ lot.remain }}
+              </strong>
+            </div>
+          </div>
+          <button class="home-quad-cta" @click="openNewPage(6)">进入出行与限行地图 ↗</button>
+        </div>
+
+        <!-- 购 · 特色商品 -->
+        <div class="card card-pad home-quad-card">
+          <div class="flex-between mb-10">
+            <span class="tag gold">🛍️ 购 · 特色商品</span>
+            <span style="font-size: 11px; color: var(--ink-3)">产地直发</span>
+          </div>
+          <strong style="font-size: 15px; display: block; margin-bottom: 8px">京山好物与李宁装备热榜</strong>
+          <div class="home-quad-products">
+            <div
+              v-for="prod in hotProducts"
+              :key="prod.id"
+              class="home-quad-prod"
+              @click="state.activeProductId = prod.id"
+            >
+              <img :src="prod.photo" :alt="prod.name" />
+              <div style="min-width: 0; flex: 1">
+                <div class="home-quad-prod-name">{{ prod.name }}</div>
+                <div class="flex-between" style="margin-top: 2px">
+                  <strong style="font-size: 13px; color: var(--accent)">¥{{ prod.memberPrice }}</strong>
+                  <span style="font-size: 10.5px; color: var(--ink-3)">已售{{ prod.sold }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="home-quad-cta" @click="openNewPage(7)">进入京山好物商城 ↗</button>
+        </div>
+
+        <!-- 娱 · 休闲娱乐 -->
+        <div class="card card-pad home-quad-card">
+          <div class="flex-between mb-10">
+            <span class="tag purple">♨️ 娱 · 休闲娱乐</span>
+            <span style="font-size: 11px; color: var(--ink-3)">6大品类</span>
+          </div>
+          <strong style="font-size: 15px; display: block; margin-bottom: 8px">温泉康养 & 院线选座热荐</strong>
+          <div class="home-quad-products">
+            <div
+              v-for="ent in hotEntertainments"
+              :key="ent.id"
+              class="home-quad-prod"
+              @click="ent.id === 'ent-6' ? (state.showCinemaModal = true) : openNewPage(8)"
+            >
+              <img :src="ent.photo" :alt="ent.name" />
+              <div style="min-width: 0; flex: 1">
+                <div class="home-quad-prod-name">{{ ent.name }}</div>
+                <div class="flex-between" style="margin-top: 2px">
+                  <strong style="font-size: 12px; color: var(--purple)">{{ ent.price }}</strong>
+                  <span style="font-size: 10.5px; color: var(--ink-3)">★ {{ ent.rating }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="home-quad-cta" @click="openNewPage(8)">查看全部农庄/温泉/影城 ↗</button>
+        </div>
+
+        <!-- 训 · 培训研学 -->
+        <div class="card card-pad home-quad-card">
+          <div class="flex-between mb-10">
+            <span class="tag green">🎓 训 · 培训研学</span>
+            <span style="font-size: 11px; color: var(--primary); font-weight: 700">{{ state.abilityLevel }}</span>
+          </div>
+          <strong style="font-size: 15px; display: block; margin-bottom: 6px">湖北省网球学校 & 晋升评测</strong>
+          <div style="font-size: 11.5px; color: var(--ink-2); line-height: 1.55; margin-bottom: 8px">
+            • 省网校冬夏令营 & 招生咨询直通<br />
+            • 指定机构五维复测晋升，同步赛事分级<br />
+            • 运动康复理疗机构赛后恢复保障
+          </div>
+          <div class="home-quad-stat">
+            <span>当前综合能力</span>
+            <strong>发球 {{ state.ability.serve }} · 底线 {{ state.ability.baseline }}</strong>
+          </div>
+          <button class="home-quad-cta" @click="openNewPage(9)">进入培训研学与评测 ↗</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 便民配套 / 互动反馈 / 小程序互通 / 个人中心 底栏速览 -->
+    <div class="grid-4">
+      <button class="home-service-card" @click="openNewPage(10)">
+        <div class="flex-between">
+          <strong style="font-size: 14px">📍 便民配套服务</strong>
+          <span class="home-service-arrow">↗</span>
+        </div>
+        <div class="home-service-desc">公厕 / 医疗急救 / 母婴室 / 天气晴19°C</div>
+        <div class="home-service-foot">查看全城便民点位与路况</div>
+      </button>
+
+      <button class="home-service-card" @click="openNewPage(11)">
+        <div class="flex-between">
+          <strong style="font-size: 14px">💬 互动反馈社区</strong>
+          <span class="home-service-arrow">↗</span>
+        </div>
+        <div class="home-service-desc">{{ state.posts.length }} 条球友真实打卡 · 12345 投诉自动分办</div>
+        <div class="home-service-foot">发布打卡评价 / 信用预警查询</div>
+      </button>
+
+      <button class="home-service-card" @click="openNewPage(12)">
+        <div class="flex-between">
+          <strong style="font-size: 14px">🔗 小程序互联互通</strong>
+          <span class="home-service-arrow">↗</span>
+        </div>
+        <div class="home-service-desc">网球记 / 政务 / 文旅 / 支付 / 网约车一键直连</div>
+        <div class="home-service-foot">查看全部 12+ 第三方互通接口</div>
+      </button>
+
+      <button class="home-service-card highlight" @click="openNewPage(13)">
+        <div class="flex-between">
+          <strong style="font-size: 14px">👤 个人中心 & 电子票根</strong>
+          <span class="home-service-arrow">↗</span>
+        </div>
+        <div class="home-service-desc">{{ activeOrdersCount }} 笔订单 · {{ state.points }} 积分 · {{ state.coupons.length }} 张卡券</div>
+        <div class="home-service-foot">管理订单、会员积分与五维能力图</div>
+      </button>
     </div>
   </section>
 </template>

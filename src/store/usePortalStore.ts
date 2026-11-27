@@ -27,6 +27,62 @@ import type {
 
 const STORAGE_KEY = 'jingshan_tennis_portal_state_v3'
 
+export interface ModuleMeta {
+  id: ModuleId
+  code: string
+  shortName: string
+  title: string
+  subtitle: string
+}
+
+export const MODULE_META_LIST: ModuleMeta[] = [
+  { id: 1, code: '01', shortName: '首页总览', title: '首页总览与全城热门精选', subtitle: '城市名片 / 热门精选 / 快捷入口' },
+  { id: 2, code: '02', shortName: '打 · 场地', title: '“打”：网球场地服务', subtitle: '全市356片球场地图 / 订场 / 实时比分 / 陪练' },
+  { id: 3, code: '03', shortName: '游 · 旅游', title: '“游”：旅游游览服务', subtitle: '京山/荆门/湖北全域延伸线与语音导览' },
+  { id: 4, code: '04', shortName: '吃 · 美食', title: '“吃”：美食服务', subtitle: '联盟85折餐厅 / 招牌菜单 / 赛事团餐' },
+  { id: 5, code: '05', shortName: '住 · 住宿', title: '“住”：住宿服务', subtitle: '短长租网球公寓 / 联盟酒店 / 购房减5万' },
+  { id: 6, code: '06', shortName: '行 · 出行', title: '“行”：出行服务', subtitle: '赛期封闭限行图 / 车位充电桩预约 / 优质司机' },
+  { id: 7, code: '07', shortName: '购 · 商品', title: '“购”：特色商品服务', subtitle: '京山农特产 / 李宁装备 / 非遗文创商城' },
+  { id: 8, code: '08', shortName: '娱 · 娱乐', title: '“娱”：休闲娱乐服务', subtitle: '温泉康养 / 农庄采摘 / 影城选座 / KTV' },
+  { id: 9, code: '09', shortName: '训 · 培训', title: '“训”：培训研学服务', subtitle: '湖北省网球学校 / 五维能力评测与晋升' },
+  { id: 10, code: '10', shortName: '便民配套', title: '便民配套服务', subtitle: '公厕 / 医疗急救 / 母婴室 / 天气路况' },
+  { id: 11, code: '11', shortName: '互动反馈', title: '互动反馈模块', subtitle: '球友打卡评价 / 12345投诉分办 / 信用预警' },
+  { id: 12, code: '12', shortName: '小程序互通', title: '小程序互联互通', subtitle: '政务 / 文旅 / 支付 / 打车一键直连' },
+  { id: 13, code: '13', shortName: '个人中心', title: '个人中心', subtitle: '我的订单 / 电子票根 / 会员积分 / 五维雷达图' },
+]
+
+export function getModuleMeta(id: ModuleId): ModuleMeta {
+  return MODULE_META_LIST.find((m) => m.id === id) ?? MODULE_META_LIST[0]!
+}
+
+function parseModuleFromUrl(): ModuleId | null {
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const raw = params.get('module')
+    if (raw) {
+      const id = Number(raw)
+      if (id >= 2 && id <= 13) return id as ModuleId
+    }
+  } catch {
+    // ignore URL parse errors
+  }
+  return null
+}
+
+function parseSurfaceFromUrl(): '全部' | '硬地' | '红土' | '室内风雨' {
+  const s = new URLSearchParams(window.location.search).get('surface')
+  if (s === '硬地' || s === '红土' || s === '室内风雨') return s
+  return '全部'
+}
+
+function parseRegionFromUrl(): '全部' | '温泉街道' | '新市街道' | '永兴街道' {
+  const r = new URLSearchParams(window.location.search).get('region')
+  if (r === '温泉街道' || r === '新市街道' || r === '永兴街道') return r
+  return '全部'
+}
+
+const initialStandaloneModule = parseModuleFromUrl()
+
 interface PersistedState {
   points: number
   abilityLevel: string
@@ -53,14 +109,15 @@ function loadSaved(): Partial<PersistedState> {
 const saved = loadSaved()
 
 const state = reactive({
-  activeModule: 1 as ModuleId,
-  searchQuery: '',
+  isStandalonePage: initialStandaloneModule !== null,
+  activeModule: (initialStandaloneModule ?? 1) as ModuleId,
+  searchQuery: new URLSearchParams(window.location.search).get('q') ?? '',
   origin: (saved.origin ?? '武汉市（省内游客）') as VisitorOrigin,
   radius: '1公里' as RadiusOption,
-  courtSurfaceFilter: '全部' as '全部' | '硬地' | '红土' | '室内风雨',
-  courtRegionFilter: '全部' as '全部' | '温泉街道' | '新市街道' | '永兴街道',
+  courtSurfaceFilter: parseSurfaceFromUrl(),
+  courtRegionFilter: parseRegionFromUrl(),
   showActivityPopup: true,
-  showEventModal: !(saved.dismissedEventModal ?? false),
+  showEventModal: initialStandaloneModule === null && !(saved.dismissedEventModal ?? false),
   dismissedEventModal: saved.dismissedEventModal ?? false,
   activeMatchRecapId: null as string | null,
   activeHotelId: null as string | null,
@@ -90,8 +147,8 @@ const state = reactive({
   dataMode: USE_MOCK ? '前端 Mock 演示模式' : 'Spring Boot 联调模式',
 })
 
-watch(
-  () => ({
+function getPersistSnapshot(): PersistedState {
+  return {
     points: state.points,
     abilityLevel: state.abilityLevel,
     ability: state.ability,
@@ -103,7 +160,58 @@ watch(
     complaints: state.complaints,
     claimedHomeSubsidy: state.claimedHomeSubsidy,
     dismissedEventModal: state.dismissedEventModal,
-  }),
+  }
+}
+
+function persistStateNow() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistSnapshot()))
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function applySavedSnapshot(next: Partial<PersistedState>) {
+  if (typeof next.points === 'number') state.points = next.points
+  if (typeof next.abilityLevel === 'string') state.abilityLevel = next.abilityLevel
+  if (next.ability) state.ability = { ...next.ability }
+  if (next.origin) state.origin = next.origin
+  if (Array.isArray(next.orders)) state.orders = next.orders
+  if (Array.isArray(next.coupons)) state.coupons = next.coupons
+  if (Array.isArray(next.favorites)) state.favorites = next.favorites
+  if (Array.isArray(next.posts)) state.posts = next.posts
+  if (Array.isArray(next.complaints)) state.complaints = next.complaints
+  if (typeof next.claimedHomeSubsidy === 'boolean') state.claimedHomeSubsidy = next.claimedHomeSubsidy
+  if (typeof next.dismissedEventModal === 'boolean') state.dismissedEventModal = next.dismissedEventModal
+}
+
+function updateDocumentTitle(moduleId: ModuleId, standalone: boolean) {
+  const meta = getModuleMeta(moduleId)
+  document.title = standalone
+    ? `${meta.title} - 京山网球公众端`
+    : '京山网球 · 公众端（游客服务版）'
+}
+
+export function buildModuleUrl(
+  id: ModuleId,
+  params?: Record<string, string | undefined>,
+): string {
+  const url = new URL(window.location.href)
+  url.hash = ''
+  url.search = ''
+  if (id !== 1) {
+    url.searchParams.set('module', String(id))
+  }
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      if (v && v !== '全部') url.searchParams.set(k, v)
+    }
+  }
+  return url.toString()
+}
+
+watch(
+  () => getPersistSnapshot(),
   (val) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
@@ -136,17 +244,71 @@ export function usePortalStore() {
     }, 3600)
   }
 
-  function switchModule(id: ModuleId) {
-    state.activeModule = id
-    if (window.location.hash !== `#m${id}`) {
-      window.history.replaceState(null, '', `#m${id}`)
+  function openModuleInNewWindow(
+    id: ModuleId,
+    params?: Record<string, string | undefined>,
+    silent = false,
+  ) {
+    const meta = getModuleMeta(id)
+    persistStateNow()
+    const targetUrl = buildModuleUrl(id, params)
+    const opened = window.open(targetUrl, '_blank')
+    if (!opened) {
+      window.location.href = targetUrl
+      return
     }
-    const stageEl = document.getElementById('moduleStageAnchor')
-    if (stageEl && id !== 1) {
-      stageEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    } else {
+    if (!silent) {
+      showToast(`已在新窗口打开「${meta.title}」完整专区`)
+    }
+  }
+
+  function openModulePage(
+    id: ModuleId,
+    options?: {
+      newWindow?: boolean
+      params?: Record<string, string | undefined>
+      silent?: boolean
+    },
+  ) {
+    // Explicit new-window jump (e.g. clicking "进入完整专区 ↗" inside the fixed summary container)
+    if (options?.newWindow && id !== 1) {
+      openModuleInNewWindow(id, options.params, options.silent)
+      return
+    }
+
+    // Standalone detail page mode (?module=2..13)
+    if (state.isStandalonePage) {
+      if (id === 1) {
+        persistStateNow()
+        window.location.href = buildModuleUrl(1)
+        return
+      }
+      state.activeModule = id
+      const nextUrl = buildModuleUrl(id, options?.params)
+      window.history.pushState({ moduleId: id }, '', nextUrl)
+      updateDocumentTitle(id, true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
     }
+
+    // Home page mode: switch the fixed summary container in-place without jumping away
+    state.activeModule = id
+    if (options?.params?.surface) {
+      const s = options.params.surface
+      if (s === '全部' || s === '硬地' || s === '红土' || s === '室内风雨') {
+        state.courtSurfaceFilter = s
+      }
+    }
+    if (options?.params?.region) {
+      const r = options.params.region
+      if (r === '全部' || r === '温泉街道' || r === '新市街道' || r === '永兴街道') {
+        state.courtRegionFilter = r
+      }
+    }
+  }
+
+  function switchModule(id: ModuleId, params?: Record<string, string | undefined>) {
+    openModulePage(id, { newWindow: false, params })
   }
 
   function openActionModal(payload: ActionModalPayload) {
@@ -205,26 +367,41 @@ export function usePortalStore() {
       showToast('请输入搜索关键词，如：红土、复盘、网球公寓、购房减5万、电影院、充电桩')
       return
     }
+    let targetId: ModuleId = 2
+    const params: Record<string, string | undefined> = { q }
+
     if (/红土/.test(q)) {
       state.courtSurfaceFilter = '红土'
-      switchModule(2)
+      params.surface = '红土'
+      targetId = 2
     } else if (/风雨|室内/.test(q)) {
       state.courtSurfaceFilter = '室内风雨'
-      switchModule(2)
-    } else if (/比分|复盘|球场|订场|陪练|约球|硬地/.test(q)) switchModule(2)
-    else if (/游|绿林山|温泉|明显陵|漳河|夜市|导览/.test(q)) switchModule(3)
-    else if (/吃|桥米|美食|团餐|菜单/.test(q)) switchModule(4)
-    else if (/住|酒店|民宿|公寓|购房|5万/.test(q)) switchModule(5)
-    else if (/行|车位|停车|充电|限行|封闭|司机|公交|租车/.test(q)) switchModule(6)
-    else if (/购|商城|李宁|葛粉|文创|特产/.test(q)) switchModule(7)
-    else if (/娱|农庄|采摘|亲子|KTV|电影|影院|康养/.test(q)) switchModule(8)
-    else if (/训|网校|研学|团建|晋升|评测|康复/.test(q)) switchModule(9)
-    else if (/公厕|卫生间|医疗|ATM|母婴|天气|路况/.test(q)) switchModule(10)
-    else if (/投诉|评价|预警|打卡|12345/.test(q)) switchModule(11)
-    else if (/小程序|政务|打车|支付/.test(q)) switchModule(12)
-    else if (/积分|会员|五维|订单|票根|个人/.test(q)) switchModule(13)
-    else switchModule(2)
-    showToast(`已为您精准定位与「${q}」相关的业务模块`)
+      params.surface = '室内风雨'
+      targetId = 2
+    } else if (/比分|复盘|球场|订场|陪练|约球|硬地/.test(q)) targetId = 2
+    else if (/游|绿林山|温泉|明显陵|漳河|夜市|导览/.test(q)) targetId = 3
+    else if (/吃|桥米|美食|团餐|菜单/.test(q)) targetId = 4
+    else if (/住|酒店|民宿|公寓|购房|5万/.test(q)) targetId = 5
+    else if (/行|车位|停车|充电|限行|封闭|司机|公交|租车/.test(q)) targetId = 6
+    else if (/购|商城|李宁|葛粉|文创|特产/.test(q)) targetId = 7
+    else if (/娱|农庄|采摘|亲子|KTV|电影|影院|康养/.test(q)) targetId = 8
+    else if (/训|网校|研学|团建|晋升|评测|康复/.test(q)) targetId = 9
+    else if (/公厕|卫生间|医疗|ATM|母婴|天气|路况/.test(q)) targetId = 10
+    else if (/投诉|评价|预警|打卡|12345/.test(q)) targetId = 11
+    else if (/小程序|政务|打车|支付/.test(q)) targetId = 12
+    else if (/积分|会员|五维|订单|票根|个人/.test(q)) targetId = 13
+
+    openModulePage(targetId, { newWindow: false, params, silent: true })
+    const meta = getModuleMeta(targetId)
+    if (!state.isStandalonePage) {
+      const stageEl = document.getElementById('moduleStageAnchor')
+      stageEl?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    showToast(
+      state.isStandalonePage
+        ? `已为您精准定位与「${q}」相关的业务模块：${meta.title}`
+        : `已在下方概览区切换至「${meta.title}」，点击底部入口可新窗口查看全部数据`,
+    )
   }
 
   function openPhoto(payload: LightboxPayload) {
@@ -466,15 +643,44 @@ export function usePortalStore() {
   }
 
   function initHashRouting() {
-    const sync = () => {
-      const m = window.location.hash.match(/^#m(\d+)$/)
-      if (m) {
-        const id = Number(m[1])
-        if (id >= 1 && id <= 13) state.activeModule = id as ModuleId
+    const syncFromLocation = () => {
+      const urlModule = parseModuleFromUrl()
+      if (urlModule) {
+        state.isStandalonePage = true
+        state.activeModule = urlModule
+        state.courtSurfaceFilter = parseSurfaceFromUrl()
+        state.courtRegionFilter = parseRegionFromUrl()
+        updateDocumentTitle(urlModule, true)
+        return
       }
+      // Backward compatibility: legacy #m2~#m13 links enter standalone mode directly
+      const hashMatch = window.location.hash.match(/^#m(\d+)$/)
+      if (hashMatch) {
+        const id = Number(hashMatch[1])
+        if (id >= 2 && id <= 13) {
+          state.isStandalonePage = true
+          state.activeModule = id as ModuleId
+          updateDocumentTitle(id as ModuleId, true)
+          return
+        }
+      }
+      state.isStandalonePage = false
+      state.activeModule = 1
+      updateDocumentTitle(1, false)
     }
-    sync()
-    window.addEventListener('hashchange', sync)
+
+    syncFromLocation()
+    window.addEventListener('popstate', syncFromLocation)
+    window.addEventListener('hashchange', syncFromLocation)
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          applySavedSnapshot(JSON.parse(e.newValue) as Partial<PersistedState>)
+        } catch {
+          // ignore invalid storage payload
+        }
+      }
+    })
   }
 
   return {
@@ -483,6 +689,9 @@ export function usePortalStore() {
     activeOrdersCount,
     showToast,
     switchModule,
+    openModulePage,
+    openModuleInNewWindow,
+    buildModuleUrl,
     openActionModal,
     openNavigation,
     closeEventModal,
