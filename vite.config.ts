@@ -7,7 +7,7 @@ const apiTarget = process.env.API_TARGET ?? 'http://127.0.0.1:8080'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 5174,
     strictPort: true,
     proxy: {
